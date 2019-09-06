@@ -19,18 +19,20 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "Failed to get domains");
     exit(1);
   }
-
-  fprintf(stdout, "%d guest domains", domainCnt);
+  for (int i = 0; i < domainCnt; i++) {
+    fprintf(stdout, "guest domain: %d\n", activeDomains[i]);
+  }
 
   // launch VM and see how vCUP is associated with pCUP
   virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
-  if (virDomainGetInfo(activeDomains[0], domainInfo) == -1) {
+  virDomainPtr domainPtr = virDomainLookupByID(conn, activeDomains[0]);
+  if (virDomainGetInfo(domainPtr, domainInfo) == -1) {
     fprintf(stderr, "Failed to get domain info");
     exit(1);
   }
 
   virVcpuInfoPtr vcupInfo = malloc(sizeof(virVcpuInfo) * domainInfo->nrVirtCpu);
-  virDomainGetVcpus(activeDomains[0], vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
+  virDomainGetVcpus(domainPtr, vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
 
   virConnectClose(conn);
   return 0;
