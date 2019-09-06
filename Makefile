@@ -1,7 +1,7 @@
 CC = gcc            # default is CC = cc
 CFLAGS = -g -Wall   # default is CFLAGS = [blank]
 CPPFLAGS =          # default is CPPFLAGS = [blank]
-LDFLAGS = -lpthread # default is LDFLAGS = [blank]
+LDFLAGS = -lpthread -lvirt # default is LDFLAGS = [blank]
 
 # default compile command: $(CC) $(CFLAGS) $(CPPFLAGS) -c -o <foo>.o <foo>.c
 

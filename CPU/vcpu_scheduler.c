@@ -12,20 +12,20 @@ int main(int argc, char *argv[]) {
   }
 
   // get all active running virtual machines
-  int domainCnt = virConnectNumOfDomains(conn);
-  int *activeDomains = malloc(sizeof(int) * domainCnt);
-  int res = virConnectListDomains(conn, domainCnt, activeDomains);
+  // int domainCnt = virConnectNumOfDomains(conn);
+  // int *activeDomains = malloc(sizeof(int) * domainCnt);
+  // int res = virConnectListDomains(conn, domainCnt, activeDomains);
 
   // launch VM and see how vCUP is associated with pCUP
-  virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
-  if (virDomainGetInfo(activeDomains[0], domainInfo) != 0) {
-    fprintf(stderr, "Failed to get domain info");
-    exit(1);
-  }
+  // virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
+  // if (virDomainGetInfo(activeDomains[0], domainInfo) != 0) {
+  //   fprintf(stderr, "Failed to get domain info");
+  //   exit(1);
+  // }
 
-  virVcpuInfoPtr vcupInfo =malloc(sizeof(virVcpuInfo) * domainInfo->nrVirtCpu);
-  virDomainGetVcpus(activeDomains[0], vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
+  // virVcpuInfoPtr vcupInfo =malloc(sizeof(virVcpuInfo) * domainInfo->nrVirtCpu);
+  // virDomainGetVcpus(activeDomains[0], vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
 
-  virConnectClose(conn);
+  // virConnectClose(conn);
   return 0;
 }
