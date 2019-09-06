@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libvirt/libvirt.h>
+#include <unistd.h>
 
 int main(int argc, char *argv[]) {
   // get connection to hypervisor
@@ -33,6 +34,15 @@ int main(int argc, char *argv[]) {
 
   virVcpuInfoPtr vcupInfo = malloc(sizeof(virVcpuInfo) * domainInfo->nrVirtCpu);
   virDomainGetVcpus(domainPtr, vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
+
+  for (int j = 0; j < 5; j++) {
+    for (int i = 0; i < domainInfo->nrVirtCpu; i++) {
+      fprintf(stderr, "%s\n", vcupInfo[i]->number);
+      fprintf(stderr, "%s\n", vcupInfo[i]->cpu);
+      fprintf(stderr, "%llu\n", vcupInfo[i]->cpuTime);
+    }
+    sleep(5);
+  }
 
   virConnectClose(conn);
   return 0;
