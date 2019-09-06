@@ -5,7 +5,7 @@ LDFLAGS = -lpthread # default is LDFLAGS = [blank]
 
 # default compile command: $(CC) $(CFLAGS) $(CPPFLAGS) -c -o <foo>.o <foo>.c
 
-cpu: vcpu_scheduler.c
+cpu: CPU/vcpu_scheduler.c
 	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
 # default linking command: $(CC) $(LDFLAGS) <foo>.o -o <foo>
 
