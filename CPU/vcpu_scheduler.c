@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  virVcpuInfoPtr vcupInfo =malloc(sizeof(virVcpuInfo) * domainInfo->vcpus_count);
-  virDomainGetVcpus(activeDomains[0], vcupInfo, domainInfo->vcpus_count, NULL, 0);
+  virVcpuInfoPtr vcupInfo =malloc(sizeof(virVcpuInfo) * domainInfo->nrVirtCpu);
+  virDomainGetVcpus(activeDomains[0], vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
 
   virConnectClose(conn);
   return 0;
