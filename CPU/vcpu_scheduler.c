@@ -37,9 +37,9 @@ int main(int argc, char *argv[]) {
 
   for (int j = 0; j < 5; j++) {
     for (int i = 0; i < domainInfo->nrVirtCpu; i++) {
-      fprintf(stderr, "%s\n", vcupInfo[i]->number);
-      fprintf(stderr, "%s\n", vcupInfo[i]->cpu);
-      fprintf(stderr, "%llu\n", vcupInfo[i]->cpuTime);
+      fprintf(stderr, "%d\n", vcupInfo[i].number);
+      fprintf(stderr, "%d\n", vcupInfo[i].cpu);
+      fprintf(stderr, "%llu\n", vcupInfo[i].cpuTime);
     }
     sleep(5);
   }
