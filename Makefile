@@ -5,9 +5,11 @@ LDFLAGS = -lpthread -lvirt # default is LDFLAGS = [blank]
 
 # default compile command: $(CC) $(CFLAGS) $(CPPFLAGS) -c -o <foo>.o <foo>.c
 
+all: cpu
+
 cpu: CPU/vcpu_scheduler.c
-	$(CC) -o $@ $< $(CFLAGS) $(LDFLAGS)
+	$(CC) -o bin/vcpu_scheduler $< $(CFLAGS) $(LDFLAGS)
 # default linking command: $(CC) $(LDFLAGS) <foo>.o -o <foo>
 
 clean:
-	$(RM) -f *.o vcpu_scheduler
+	$(RM) -rf bin/*
