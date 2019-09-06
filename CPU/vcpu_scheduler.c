@@ -22,26 +22,27 @@ int main(int argc, char *argv[]) {
   }
   for (int i = 0; i < domainCnt; i++) {
     fprintf(stdout, "guest domain: %d\n", activeDomains[i]);
-  }
 
-  // launch VM and see how vCUP is associated with pCUP
-  virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
-  virDomainPtr domainPtr = virDomainLookupByID(conn, activeDomains[0]);
-  if (virDomainGetInfo(domainPtr, domainInfo) == -1) {
-    fprintf(stderr, "Failed to get domain info");
-    exit(1);
-  }
-
-  virVcpuInfoPtr vcupInfo = malloc(sizeof(virVcpuInfo) * domainInfo->nrVirtCpu);
-  virDomainGetVcpus(domainPtr, vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
-
-  for (int j = 0; j < 5; j++) {
-    for (int i = 0; i < domainInfo->nrVirtCpu; i++) {
-      fprintf(stderr, "%d\n", vcupInfo[i].number);
-      fprintf(stderr, "%d\n", vcupInfo[i].cpu);
-      fprintf(stderr, "%llu\n", vcupInfo[i].cpuTime);
+    // get domain cpu info
+    virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
+    virDomainPtr domainPtr = virDomainLookupByID(conn, activeDomains[i]);
+    if (virDomainGetInfo(domainPtr, domainInfo) == -1) {
+      fprintf(stderr, "Failed to get domain info");
+      exit(1);
     }
-    sleep(5);
+
+    virVcpuInfoPtr vcupInfo = malloc(sizeof(virVcpuInfo) * domainInfo->nrVirtCpu);
+    virDomainGetVcpus(domainPtr, vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
+
+    fprintf(stdout, "vCPU cnt: %d\n", domainInfo->nrVirtCpu);
+    for (int j = 0; j < 5; j++) {
+      for (int i = 0; i < domainInfo->nrVirtCpu; i++) {
+        fprintf(stderr, "%d\n", vcupInfo[i].number);
+        fprintf(stderr, "%d\n", vcupInfo[i].cpu);
+        fprintf(stderr, "%llu\n", vcupInfo[i].cpuTime);
+      }
+      sleep(5);
+    }
   }
 
   virConnectClose(conn);
