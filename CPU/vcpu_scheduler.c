@@ -31,7 +31,6 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
   for (int i = 0; i < domainCnt; i++) {
     virDomainPtr domain = virDomainLookupByID(conn, activeDomains[i]);
     virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
-    virVcpuInfoPtr vcpuInfo = malloc(sizeof(virVcpuInfo));
     if (virDomainGetInfo(domain, domainInfo) == -1) {
       fprintf(stderr, "Failed to get domain info\n");
       exit(1);
@@ -40,6 +39,8 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
       fprintf(stderr, "Error, vCPU not equal to 1\n");
       exit(1);
     }
+    virVcpuInfoPtr vcpuInfo = malloc(sizeof(virVcpuInfo));
+    virDomainGetVcpus(domainPtr, vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
     int preStatsIdx = findById(preVCPUStats, domainCnt, activeDomains[i]);
     int pCPU = vcpuInfo->cpu;
     fprintf(stderr, "%d\n", vcpuInfo->number);
