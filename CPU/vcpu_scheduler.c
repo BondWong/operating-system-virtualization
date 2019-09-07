@@ -40,7 +40,7 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
       exit(1);
     }
     virVcpuInfoPtr vcpuInfo = malloc(sizeof(virVcpuInfo));
-    virDomainGetVcpus(domainPtr, vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
+    virDomainGetVcpus(domain, vcpuInfo, domainInfo->nrVirtCpu, NULL, 0);
     int preStatsIdx = findById(preVCPUStats, domainCnt, activeDomains[i]);
     int pCPU = vcpuInfo->cpu;
     fprintf(stderr, "%d\n", vcpuInfo->number);
