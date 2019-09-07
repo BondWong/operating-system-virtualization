@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <libvirt/libvirt.h>
 #include <unistd.h>
+#include <string.h>
 
 struct pCPUStats {
   unsigned long long CPUTimeDelta; // time delta from last interval
@@ -43,7 +44,7 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     int pCPU = vcupInfo->cpu;
     unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preVCPUStats[preStatsIdx].cpuTime;
     unsigned long long delta = vcupInfo->cpuTime - pCPUTimStart;
-    curVCPUStats[i] = activeDomains[i];
+    curVCPUStats[i].domainID = activeDomains[i];
     curVCPUStats[i].CPUTimeDelta = delta;
     curVCPUStats[i].cpuTime =vcupInfo->cpuTime;
     pCPUStats[pCPU].CPUTimeDelta += delta;
@@ -92,13 +93,12 @@ int main(int argc, char *argv[]) {
     virConnectListDomains(conn, activeDomains, domainCnt);
 
     pCPUStatsPtr pCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-    sampleDomainInfo(domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
+    sampleDomainInfo(conn, domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
     // get each pCPU states
     // sort them from buiest to freeist
     // iterate the list and move job from busy ones to free ones
     free(pCPUStats);
     sleep(interval);
-    int domainCnt = virConnectNumOfDomains(conn);
   }
 
   virConnectClose(conn);
