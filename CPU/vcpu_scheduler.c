@@ -35,17 +35,17 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
       fprintf(stderr, "Failed to get domain info");
       exit(1);
     }
-    if (domainInfo.nrVirtCpu != 1) {
+    if (domainInfo->nrVirtCpu != 1) {
       fprintf(stderr, "Error, vCPU not equal to 1");
       exit(1);
     }
     int preStatsIdx = findById(preVCPUStats, domainCnt, activeDomains[i]);
-    int pCPU = vcupInfo.cpu;
-    unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preStats.cpuTime;
-    unsigned long long delta = vcupInfo.cpuTime - pCPUTimStart;
+    int pCPU = vcupInfo->cpu;
+    unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preVCPUStats[preStatsIdx].cpuTime;
+    unsigned long long delta = vcupInfo->cpuTime - pCPUTimStart;
     curVCPUStats[i] = activeDomains[i];
     curVCPUStats[i].CPUTimeDelta = delta;
-    curVCPUStats[i].cpuTime =vcupInfo.cpuTime;
+    curVCPUStats[i].cpuTime =vcupInfo->cpuTime;
     pCPUStats[pCPU].CPUTimeDelta += delta;
     pCPUStats[pCPU].pCPU = pCPU;
     pCPUStats[pCPU].domainIdCnt++;
@@ -58,7 +58,7 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     pCPUStats[pCPU].domainIds = domainIds;
 
     fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
-      activeDomains[i], virDomainGetName(domainPtr), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
+      activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
     free(domainInfo);
     free(vcupInfo);
   }
@@ -83,28 +83,26 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
+  int domainCnt = virConnectNumOfDomains(conn);
   vCPUStatsPtr curVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
   vCPUStatsPtr prevVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
-  int domainCnt = virConnectNumOfDomains(conn);
   while(domainCnt > 0) {
     // get all active running virtual machines
     int *activeDomains = malloc(sizeof(int) * domainCnt);
     virConnectListDomains(conn, activeDomains, domainCnt);
 
     pCPUStatsPtr pCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-    pCPUStatsPtr vCPUStats = malloc(sizeof(struct pCPUStats) * domainCnt);
     sampleDomainInfo(domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
     // get each pCPU states
     // sort them from buiest to freeist
     // iterate the list and move job from busy ones to free ones
     free(pCPUStats);
-    free(vCPUStats);
     sleep(interval);
     int domainCnt = virConnectNumOfDomains(conn);
   }
 
   virConnectClose(conn);
-  if (curDomainInfo != NULL) free(curDomainInfo);
-  if (prevDomainInfo != NULL) free(prevDomainInfo);
+  if (curVCPUInfo != NULL) free(curVCPUInfo);
+  if (prevVCPUInfo != NULL) free(prevVCPUInfo);
   return 0;
 }
