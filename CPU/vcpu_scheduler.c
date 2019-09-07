@@ -31,46 +31,49 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
   for (int i = 0; i < domainCnt; i++) {
     virDomainPtr domain = virDomainLookupByID(conn, activeDomains[i]);
     virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
-    virVcpuInfoPtr vcupInfo = malloc(sizeof(virVcpuInfo));
+    virVcpuInfoPtr vcpuInfo = malloc(sizeof(virVcpuInfo));
     if (virDomainGetInfo(domain, domainInfo) == -1) {
-      fprintf(stderr, "Failed to get domain info");
+      fprintf(stderr, "Failed to get domain info\n");
       exit(1);
     }
     if (domainInfo->nrVirtCpu != 1) {
-      fprintf(stderr, "Error, vCPU not equal to 1");
+      fprintf(stderr, "Error, vCPU not equal to 1\n");
       exit(1);
     }
     int preStatsIdx = findById(preVCPUStats, domainCnt, activeDomains[i]);
-    int pCPU = vcupInfo->cpu;
+    int pCPU = vcpuInfo->cpu;
+    fprintf(stderr, "%d\n", vcpuInfo->number);
+    fprintf(stderr, "%d\n", vcpuInfo->cpu);
+    fprintf(stderr, "%llu\n", vcpuInfo->cpuTime);
     unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preVCPUStats[preStatsIdx].cpuTime;
-    unsigned long long delta = vcupInfo->cpuTime - pCPUTimStart;
+    unsigned long long delta = vcpuInfo->cpuTime - pCPUTimStart;
     curVCPUStats[i].domainID = activeDomains[i];
     curVCPUStats[i].CPUTimeDelta = delta;
-    curVCPUStats[i].cpuTime =vcupInfo->cpuTime;
-    pCPUStats[pCPU].CPUTimeDelta += delta;
-    pCPUStats[pCPU].pCPU = pCPU;
-    pCPUStats[pCPU].domainIdCnt++;
-    int* domainIds = malloc(sizeof(int) * pCPUStats[pCPU].domainIdCnt);
-    if (pCPUStats[pCPU].domainIdCnt > 1) {
-      memcpy(domainIds, pCPUStats[pCPU].domainIds, sizeof(int) * pCPUStats[pCPU].domainIdCnt - 1);
-      free(pCPUStats[pCPU].domainIds);
-    }
-    domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
-    pCPUStats[pCPU].domainIds = domainIds;
-
-    fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
-      activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
+    curVCPUStats[i].cpuTime =vcpuInfo->cpuTime;
+    // pCPUStats[pCPU].CPUTimeDelta += delta;
+    // pCPUStats[pCPU].pCPU = pCPU;
+    // pCPUStats[pCPU].domainIdCnt++;
+    // int* domainIds = malloc(sizeof(int) * pCPUStats[pCPU].domainIdCnt);
+    // if (pCPUStats[pCPU].domainIdCnt > 1) {
+    //   memcpy(domainIds, pCPUStats[pCPU].domainIds, sizeof(int) * pCPUStats[pCPU].domainIdCnt - 1);
+    //   free(pCPUStats[pCPU].domainIds);
+    // }
+    // domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
+    // pCPUStats[pCPU].domainIds = domainIds;
+    //
+    // fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
+    //   activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
     free(domainInfo);
-    free(vcupInfo);
+    free(vcpuInfo);
   }
-  memcpy(preVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
+  // memcpy(preVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
 
   return 0;
 }
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
-    fprintf(stderr, "Error: Invalid arugment");
+    fprintf(stderr, "Error: Invalid arugment\n");
     exit(1);
   }
 
@@ -92,6 +95,7 @@ int main(int argc, char *argv[]) {
     int *activeDomains = malloc(sizeof(int) * domainCnt);
     virConnectListDomains(conn, activeDomains, domainCnt);
 
+    fprintf(stdout, "Sampling pCPU stats...\n");
     pCPUStatsPtr pCPUStats = malloc(sizeof(struct pCPUStats) * 4);
     sampleDomainInfo(conn, domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
     // get each pCPU states
