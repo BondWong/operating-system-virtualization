@@ -21,8 +21,6 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
   for (int i = 0; i < domainCnt; i++) {
-    fprintf(stdout, "guest domain: %d\n", activeDomains[i]);
-
     // get domain cpu info
     virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
     virDomainPtr domainPtr = virDomainLookupByID(conn, activeDomains[i]);
@@ -30,6 +28,8 @@ int main(int argc, char *argv[]) {
       fprintf(stderr, "Failed to get domain info");
       exit(1);
     }
+
+    fprintf(stdout, "guest domain: %d, %s\n", activeDomains[i], virDomainGetName(domainPtr));
 
     virVcpuInfoPtr vcupInfo = malloc(sizeof(virVcpuInfo) * domainInfo->nrVirtCpu);
     virDomainGetVcpus(domainPtr, vcupInfo, domainInfo->nrVirtCpu, NULL, 0);
