@@ -11,6 +11,7 @@ struct pCPUStats {
 };
 
 struct vCPUStats {
+  unsigned long long cpuTime;
   unsigned long long CPUTimeDelta; // time delta from last interval
   int domainID;
 };
@@ -18,26 +19,33 @@ struct vCPUStats {
 typedef struct pCPUStats* pCPUStatsPtr;
 typedef struct vCPUStats* vCPUStatsPtr;
 
-int sampleDomainInfo(int domainCnt, int* activeDomains, virDomainInfoPtr prevDomainInfo,
-  virDomainInfoPtr curDomainInfo, pCPUStatsPtr pCPUStats, vCPUStatsPtr vCPUStats) {
-  if (curDomainInfo == NULL) {
-    virDomainInfoPtr curDomainInfo = malloc(sizeof(virDomainInfo) * domainCnt);
-    virDomainInfoPtr prevDomainInfo = malloc(sizeof(virDomainInfo) * domainCnt);
-    memset(curDomainInfo, 0, sizeof(virDomainInfo) * domainCnt);
-    memset(prevDomainInfo, 0, sizeof(virDomainInfo) * domainCnt);
-  }
+int findById(vCPUStatsPtr vCPUStats, int size, int id) {
+  for (int i = 0; i < size; i++) if (vCPUStats[i].domainID == id) return i;
+  return -1;
+}
 
+int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
+  pCPUStatsPtr pCPUStats, vCPUStatsPtr preVCPUStats, vCPUStatsPtr curVCPUStats) {
   // write cur domain info to prev domain info,  and update domain info
   for (int i = 0; i < domainCnt; i++) {
     virDomainPtr domain = virDomainLookupByID(conn, activeDomains[i]);
-    if (virDomainGetInfo(domain, curDomainInfo[i]) == -1) {
+    virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
+    virVcpuInfoPtr vcupInfo = malloc(sizeof(virVcpuInfo));
+    if (virDomainGetInfo(domain, domainInfo) == -1) {
       fprintf(stderr, "Failed to get domain info");
       exit(1);
     }
-    int pCPU = curDomainInfo[i].cpu;
-    unsigned long long pCPUTimEnd = curDomainInfo[i].cpuTime;
-    unsigned long long pCPUTimStart = prevDomainInfo[i].cpuTime;
-    unsigned long long delta = pCPUTimEnd - pCPUTimStart;
+    if (domainInfo.nrVirtCpu != 1) {
+      fprintf(stderr, "Error, vCPU not equal to 1");
+      exit(1);
+    }
+    int preStatsIdx = findById(preVCPUStats, domainCnt, activeDomains[i]);
+    int pCPU = vcupInfo.cpu;
+    unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preStats.cpuTime;
+    unsigned long long delta = vcupInfo.cpuTime - pCPUTimStart;
+    curVCPUStats[i] = activeDomains[i];
+    curVCPUStats[i].CPUTimeDelta = delta;
+    curVCPUStats[i].cpuTime =vcupInfo.cpuTime;
     pCPUStats[pCPU].CPUTimeDelta += delta;
     pCPUStats[pCPU].pCPU = pCPU;
     pCPUStats[pCPU].domainIdCnt++;
@@ -48,12 +56,13 @@ int sampleDomainInfo(int domainCnt, int* activeDomains, virDomainInfoPtr prevDom
     }
     domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
     pCPUStats[pCPU].domainIds = domainIds;
-    vCPUStats[i] = activeDomains[i];
-    vCPUStats[i].CPUTimeDelta = delta;
 
     fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
-      activeDomains[i], virDomainGetName(domainPtr), vCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
+      activeDomains[i], virDomainGetName(domainPtr), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
+    free(domainInfo);
+    free(vcupInfo);
   }
+  memcpy(preVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
 
   return 0;
 }
@@ -74,8 +83,8 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  virDomainInfoPtr curDomainInfo = NULL;
-  virDomainInfoPtr prevDomainInfo = NULL;
+  vCPUStatsPtr curVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
+  vCPUStatsPtr prevVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
   int domainCnt = virConnectNumOfDomains(conn);
   while(domainCnt > 0) {
     // get all active running virtual machines
@@ -84,7 +93,7 @@ int main(int argc, char *argv[]) {
 
     pCPUStatsPtr pCPUStats = malloc(sizeof(struct pCPUStats) * 4);
     pCPUStatsPtr vCPUStats = malloc(sizeof(struct pCPUStats) * domainCnt);
-    sampleDomainInfo(domainCnt, activeDomains, prevDomainInfo, curDomainInfo, pCPUStats, vCPUStats)
+    sampleDomainInfo(domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
     // get each pCPU states
     // sort them from buiest to freeist
     // iterate the list and move job from busy ones to free ones
