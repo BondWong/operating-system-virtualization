@@ -43,31 +43,28 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     virDomainGetVcpus(domain, vcpuInfo, domainInfo->nrVirtCpu, NULL, 0);
     int preStatsIdx = findById(preVCPUStats, domainCnt, activeDomains[i]);
     int pCPU = vcpuInfo->cpu;
-    fprintf(stderr, "%d\n", vcpuInfo->number);
-    fprintf(stderr, "%d\n", vcpuInfo->cpu);
-    fprintf(stderr, "%llu\n", vcpuInfo->cpuTime);
     unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preVCPUStats[preStatsIdx].cpuTime;
     unsigned long long delta = vcpuInfo->cpuTime - pCPUTimStart;
     curVCPUStats[i].domainID = activeDomains[i];
     curVCPUStats[i].CPUTimeDelta = delta;
     curVCPUStats[i].cpuTime =vcpuInfo->cpuTime;
-    // pCPUStats[pCPU].CPUTimeDelta += delta;
-    // pCPUStats[pCPU].pCPU = pCPU;
-    // pCPUStats[pCPU].domainIdCnt++;
-    // int* domainIds = malloc(sizeof(int) * pCPUStats[pCPU].domainIdCnt);
-    // if (pCPUStats[pCPU].domainIdCnt > 1) {
-    //   memcpy(domainIds, pCPUStats[pCPU].domainIds, sizeof(int) * pCPUStats[pCPU].domainIdCnt - 1);
-    //   free(pCPUStats[pCPU].domainIds);
-    // }
-    // domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
-    // pCPUStats[pCPU].domainIds = domainIds;
-    //
-    // fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
-    //   activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
+    pCPUStats[pCPU].CPUTimeDelta += delta;
+    pCPUStats[pCPU].pCPU = pCPU;
+    pCPUStats[pCPU].domainIdCnt++;
+    int* domainIds = malloc(sizeof(int) * pCPUStats[pCPU].domainIdCnt);
+    if (pCPUStats[pCPU].domainIdCnt > 1) {
+      memcpy(domainIds, pCPUStats[pCPU].domainIds, sizeof(int) * pCPUStats[pCPU].domainIdCnt - 1);
+      free(pCPUStats[pCPU].domainIds);
+    }
+    domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
+    pCPUStats[pCPU].domainIds = domainIds;
+
+    fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
+      activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
     free(domainInfo);
     free(vcpuInfo);
   }
-  // memcpy(preVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
+  memcpy(preVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
 
   return 0;
 }
