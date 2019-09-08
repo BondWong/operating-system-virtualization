@@ -69,6 +69,49 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
   return 0;
 }
 
+int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int vCPUCnt) {
+  int preFrom = -1, preTo = -1, curFrom = -1, curTo = -1;
+  int shouldStop = 0;
+  while (shouldStop == 0) {
+    unsigned long long curMax = 0;
+    unsigned long long curMin = -1;
+    int maxIdx = -1;
+    int minIdx = -1;
+    for (int i = 0; i < pCPUCnt; i++) {
+      if (pCPUStats[i].CPUTimeDelta > curMax) {
+        curMax = pCPUStats[i].CPUTimeDelta;
+        maxIdx = i;
+      }
+      if (curMin == -1 || pCPUStats[i].CPUTimeDelta < curMin) {
+        curMin = pCPUStats[i].CPUTimeDelta;
+        minIdx = i;
+      }
+    }
+    preFrom = curFrom;
+    preTo = curTo;
+    curFrom = pCPUStats[maxIdx].pCPU;
+    curTo = pCPUStats[minIdx].pCPU;
+    if (curTo == preFrom && curFrom == preTo) shouldStop = 1;
+    if (pCPUStats[curFrom].domainIdCnt == 0) break;
+
+    int id = pCPUStats[curFrom].domainIds[pCPUStats[curFrom].domainIdCnt - 1];
+    int index = findById(curVCPUInfo, id);
+    fprintf(stdout, "workload size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
+      curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, pCPUStats[curFrom].pCPU, pCPUStats[curTo].pCPU);
+
+    pCPUStats[curTo].CPUTimeDelta += curVCPUInfo[index].CPUTimeDelta;
+    pCPUStats[curTo].domainIdCnt++;
+    pCPUStats[curTo].domainIds = memcpy(malloc(sizeof(int) * pCPUStats[curTo].domainIdCnt),
+      sizeof(int) * pCPUStats[curTo].domainIdCnt - 1);
+    pCPUStats[curTo].domainIds[pCPUStats[curTo].domainIdCnt - 1] = id;
+    pCPUStats[curFrom].CPUTimeDelta -= curVCPUInfo[index].CPUTimeDelta;
+    pCPUStats[curFrom].domainIdCnt--;
+
+    fprintf(stdout, "done moving workflow of domain id: %d, from pCPU: %d, to pCPU: %d \n",
+      pCPUStats[curTo].domainIds[pCPUStats[curTo].domainIdCnt - 1], pCPUStats[curFrom].pCPU, pCPUStats[curTo].pCPU);
+  }
+}
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "Error: Invalid arugment\n");
@@ -95,10 +138,10 @@ int main(int argc, char *argv[]) {
 
     fprintf(stdout, "Sampling pCPU stats...\n");
     pCPUStatsPtr pCPUStats = malloc(sizeof(struct pCPUStats) * 4);
+    // get pCPU stats
     sampleDomainInfo(conn, domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
-    // get each pCPU states
-    // sort them from buiest to freeist
-    // iterate the list and move job from busy ones to free ones
+    // rebalance pCPU
+    rebalance(pCPUStats, 4, curVCPUInfo, domainCnt);
     free(pCPUStats);
     sleep(interval);
   }
