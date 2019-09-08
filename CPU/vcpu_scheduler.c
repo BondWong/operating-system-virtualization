@@ -128,7 +128,7 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
 int rebalanceBySorting(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int vCPUCnt) {
   qsort((void *)curVCPUInfo, vCPUCnt, sizeof(struct vCPUStats), comparator);
 
-  for (int i = 0; i < vCPUCnt; i++) fprintf(stdout, "%d ", curVCPUInfo[i].CPUTimeDelta);
+  for (int i = 0; i < vCPUCnt; i++) fprintf(stdout, "%llu ", curVCPUInfo[i].CPUTimeDelta);
   fprintf(stdout, "\n");
 
   int k = 0;
