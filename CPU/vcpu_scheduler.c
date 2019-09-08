@@ -184,7 +184,11 @@ int main(int argc, char *argv[]) {
     memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
     repin(conn, curPCPUStats, prePCPUStats, 4);
 
-    if (curPCPUStats != NULL) free(curPCPUStats);
+    for (int i = 0; i < 4; i++) {
+      curPCPUStats[i].CPUTimeDelta = 0;
+      curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
+      curPCPUStats[i].domainIdCnt = 0;
+    }
     sleep(interval);
   }
 
