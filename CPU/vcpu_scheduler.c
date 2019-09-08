@@ -89,7 +89,7 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
 
     int id = pCPUStats[curFrom].domainIds[pCPUStats[curFrom].domainIdCnt - 1];
     int index = findById(curVCPUInfo, vCPUCnt, id);
-    fprintf(stdout, "workload size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
+    fprintf(stdout, "moving workload of size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
       curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, curFrom, curTo);
 
     pCPUStats[curTo].CPUTimeDelta += curVCPUInfo[index].CPUTimeDelta;
@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
       pCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
       pCPUStats[i].domainIdCnt = 0;
     }
-    
+
     // get pCPU stats
     sampleDomainInfo(conn, domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
     // rebalance pCPU
