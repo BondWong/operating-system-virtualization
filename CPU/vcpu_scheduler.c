@@ -142,17 +142,17 @@ int main(int argc, char *argv[]) {
   int domainCnt = virConnectNumOfDomains(conn);
   vCPUStatsPtr curVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
   vCPUStatsPtr prevVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
-  pCPUStatsPtr curPCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-  // pCPUStatsPtr prePCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-  for (int i = 0; i < 4; i++) {
-    curPCPUStats[i].CPUTimeDelta = 0;
-    curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
-    curPCPUStats[i].domainIdCnt = 0;
-  }
   while(domainCnt > 0) {
     // get all active running virtual machines
     int *activeDomains = malloc(sizeof(int) * domainCnt);
     virConnectListDomains(conn, activeDomains, domainCnt);
+    pCPUStatsPtr curPCPUStats = malloc(sizeof(struct pCPUStats) * 4);
+    // pCPUStatsPtr prePCPUStats = malloc(sizeof(struct pCPUStats) * 4);
+    for (int i = 0; i < 4; i++) {
+      curPCPUStats[i].CPUTimeDelta = 0;
+      curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
+      curPCPUStats[i].domainIdCnt = 0;
+    }
     // memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
 
     fprintf(stdout, "Sampling pCPU stats...\n");
@@ -164,13 +164,13 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "Repinning vCPUs...\n");
     // repin(conn, curPCPUStats, 4);
 
+    if (prevVCPUInfo != NULL) free(prevVCPUInfo);
+    // if (prePCPUStats != NULL) free(prePCPUStats);
     sleep(interval);
   }
 
   virConnectClose(conn);
   if (curVCPUInfo != NULL) free(curVCPUInfo);
   if (prevVCPUInfo != NULL) free(prevVCPUInfo);
-  if (curPCPUStats != NULL) free(curPCPUStats);
-  // if (prePCPUStats != NULL) free(prePCPUStats);
   return 0;
 }
