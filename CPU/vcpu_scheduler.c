@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
     averageDelta /= 4;
     int rebalanceNeeded = 0;
     for (int i = 0; i < PCPU_CNT; i++) {
-      if (abs(curPCPUStats[i].CPUTimeDelta - averageDelta) > 0.3 * averageDelta) {
+      if (abs(curPCPUStats[i].CPUTimeDelta - averageDelta) > 0.1 * averageDelta) {
         rebalanceNeeded = 1;
         break;
       }
