@@ -108,7 +108,9 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
 int repin(virConnectPtr conn, pCPUStatsPtr curPCPUStats, int pCPUCnt) {
   for (int i = 0; i < pCPUCnt; i++) {
     unsigned char pCPU = 0x1 << i;
+    fprintf(stdout, "domain cnt %d\n", curPCPUStats[i].domainIdCnt);
     for (int j = 0; j < curPCPUStats[i].domainIdCnt; i++) {
+      fprintf(stdout, "Repining domain %d ... \n", curPCPUStats[i].domainIds[j]);
       virDomainPtr domain = virDomainLookupByID(conn, curPCPUStats[i].domainIds[j]);
       virDomainPinVcpu(domain, 0, &pCPU, 1);
     }
