@@ -133,6 +133,7 @@ int rebalanceBySorting(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPU
 
   int k = 0;
   for (int i = 0, j = vCPUCnt - 1; i <= j; i++, j--) {
+    pCPUStats[k].domainIdCnt = 0; // remove all ids so that we can reassign
     pCPUStats[k].CPUTimeDelta += curVCPUInfo[i].CPUTimeDelta;
     pCPUStats[k].domainIdCnt++;
     pCPUStats[k].domainIds[pCPUStats[k].domainIdCnt - 1] = curVCPUInfo[i].domainID;
