@@ -45,7 +45,6 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preVCPUStats[preStatsIdx].cpuTime;
     if (preStatsIdx != -1) fprintf(stdout, "startTime: %llu\n", preVCPUStats[preStatsIdx].cpuTime);
     double delta = (double) (vcpuInfo->cpuTime - pCPUTimStart);
-    fprintf(stdout, "%f\n", delta);
     curVCPUStats[i].domainID = activeDomains[i];
     curVCPUStats[i].CPUTimeDelta = delta;
     curVCPUStats[i].cpuTime = vcpuInfo->cpuTime;
@@ -58,7 +57,9 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     free(domainInfo);
     free(vcpuInfo);
   }
+  fprintf(stdout, "%llu\n", preVCPUStats[0].cpuTime);
   memcpy(preVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
+  fprintf(stdout, "%llu\n", preVCPUStats[0].cpuTime);
 
   return 0;
 }
@@ -143,7 +144,13 @@ int main(int argc, char *argv[]) {
 
   int domainCnt = virConnectNumOfDomains(conn);
   vCPUStatsPtr curVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
+  for (int i = 0; i < domainCnt; i++) {
+    curVCPUInfo[i].domainID = -1;
+    curVCPUInfo[i].cpuTime = 0;
+    curVCPUInfo[i].CPUTimeDelta = 0;
+  }
   vCPUStatsPtr prevVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
+  memcpy(prevVCPUInfo, curVCPUInfo, sizeof(struct vCPUStats) * domainCnt);
   while(domainCnt > 0) {
     // get all active running virtual machines
     int *activeDomains = malloc(sizeof(int) * domainCnt);
