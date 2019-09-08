@@ -143,14 +143,14 @@ int main(int argc, char *argv[]) {
   }
 
   int domainCnt = virConnectNumOfDomains(conn);
-  vCPUStatsPtr curVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
+  vCPUStatsPtr curVCPUStats = malloc(sizeof(struct pCPUStats) * domainCnt);
   for (int i = 0; i < domainCnt; i++) {
-    curVCPUInfo[i].domainID = -1;
-    curVCPUInfo[i].cpuTime = 0;
-    curVCPUInfo[i].CPUTimeDelta = 0;
+    curVCPUStats[i].domainID = -1;
+    curVCPUStats[i].cpuTime = 0;
+    curVCPUStats[i].CPUTimeDelta = 0;
   }
-  vCPUStatsPtr prevVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
-  memcpy(prevVCPUInfo, curVCPUInfo, sizeof(struct vCPUStats) * domainCnt);
+  vCPUStatsPtr prevVCPUStats = malloc(sizeof(struct pCPUStats) * domainCnt);
+  memcpy(prevVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
   while(domainCnt > 0) {
     // get all active running virtual machines
     int *activeDomains = malloc(sizeof(int) * domainCnt);
@@ -165,21 +165,30 @@ int main(int argc, char *argv[]) {
     // memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
 
     fprintf(stdout, "Sampling pCPU stats...\n");
-    sampleDomainInfo(conn, domainCnt, activeDomains, curPCPUStats, prevVCPUInfo, curVCPUInfo);
+    sampleDomainInfo(conn, domainCnt, activeDomains, curPCPUStats, prevVCPUStats, curVCPUStats);
 
     fprintf(stdout, "Running rebalance algorithm...\n");
-    // rebalance(curPCPUStats, 4, curVCPUInfo, domainCnt);
+    // rebalance(curPCPUStats, 4, curVCPUStats, domainCnt);
 
     fprintf(stdout, "Repinning vCPUs...\n");
     // repin(conn, curPCPUStats, 4);
 
-    if (prevVCPUInfo != NULL) free(prevVCPUInfo);
+    if (curPCPUStats != NULL) {
+      for (int i = 0; i < 4; i++) free(&curPCPUStats[i]);
+      curPCPUStats = NULL;
+    }
     // if (prePCPUStats != NULL) free(prePCPUStats);
     sleep(interval);
   }
 
   virConnectClose(conn);
-  if (curVCPUInfo != NULL) free(curVCPUInfo);
-  if (prevVCPUInfo != NULL) free(prevVCPUInfo);
+  if (curVCPUStats != NULL) {
+    for (int i = 0; i < domainCnt; i++) free(&curVCPUStats[i]);
+    curVCPUStats = NULL;
+  }
+  if (prevVCPUStats != NULL) {
+    for (int i = 0; i < domainCnt; i++) free(&prevVCPUStats[i]);
+    prevVCPUStats = NULL;
+  }
   return 0;
 }
