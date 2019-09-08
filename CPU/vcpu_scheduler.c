@@ -173,22 +173,13 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "Repinning vCPUs...\n");
     // repin(conn, curPCPUStats, 4);
 
-    if (curPCPUStats != NULL) {
-      for (int i = 0; i < 4; i++) free(&curPCPUStats[i]);
-      curPCPUStats = NULL;
-    }
+    if (curPCPUStats != NULL) free(curPCPUStats);
     // if (prePCPUStats != NULL) free(prePCPUStats);
     sleep(interval);
   }
 
   virConnectClose(conn);
-  if (curVCPUStats != NULL) {
-    for (int i = 0; i < domainCnt; i++) free(&curVCPUStats[i]);
-    curVCPUStats = NULL;
-  }
-  if (prevVCPUStats != NULL) {
-    for (int i = 0; i < domainCnt; i++) free(&prevVCPUStats[i]);
-    prevVCPUStats = NULL;
-  }
+  free(curVCPUStats);
+  free(prevVCPUStats);
   return 0;
 }
