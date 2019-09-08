@@ -51,13 +51,8 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     pCPUStats[pCPU].CPUTimeDelta += delta;
     pCPUStats[pCPU].pCPU = pCPU;
     pCPUStats[pCPU].domainIdCnt++;
-    int* domainIds = malloc(sizeof(int) * pCPUStats[pCPU].domainIdCnt);
-    if (pCPUStats[pCPU].domainIdCnt > 1) {
-      memcpy(domainIds, pCPUStats[pCPU].domainIds, sizeof(int) * pCPUStats[pCPU].domainIdCnt - 1);
-      free(pCPUStats[pCPU].domainIds);
-    }
-    domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
-    pCPUStats[pCPU].domainIds = domainIds;
+    pCPUStats[pCPU].domainIds = malloc(sizeof(int) * domainCnt);
+    pCPUStats[pCPU].domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
 
     fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
       activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
@@ -95,14 +90,12 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
     if (pCPUStats[curFrom].domainIdCnt == 0) break;
 
     int id = pCPUStats[curFrom].domainIds[pCPUStats[curFrom].domainIdCnt - 1];
-    int index = findById(curVCPUInfo, id);
+    int index = findById(curVCPUInfo, vCPUCnt, id);
     fprintf(stdout, "workload size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
       curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, pCPUStats[curFrom].pCPU, pCPUStats[curTo].pCPU);
 
     pCPUStats[curTo].CPUTimeDelta += curVCPUInfo[index].CPUTimeDelta;
     pCPUStats[curTo].domainIdCnt++;
-    pCPUStats[curTo].domainIds = memcpy(malloc(sizeof(int) * pCPUStats[curTo].domainIdCnt),
-      sizeof(int) * pCPUStats[curTo].domainIdCnt - 1);
     pCPUStats[curTo].domainIds[pCPUStats[curTo].domainIdCnt - 1] = id;
     pCPUStats[curFrom].CPUTimeDelta -= curVCPUInfo[index].CPUTimeDelta;
     pCPUStats[curFrom].domainIdCnt--;
