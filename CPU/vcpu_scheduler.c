@@ -5,14 +5,14 @@
 #include <string.h>
 
 struct pCPUStats {
-  unsigned long long CPUTimeDelta; // time delta from last interval
+  double CPUTimeDelta; // time delta from last interval
   int * domainIds; // id of doamins that use this pCPU
   int domainIdCnt;
 };
 
 struct vCPUStats {
   unsigned long long cpuTime;
-  unsigned long long CPUTimeDelta; // time delta from last interval
+  double CPUTimeDelta; // time delta from last interval
   int domainID;
 };
 
@@ -43,10 +43,10 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     int preStatsIdx = findById(preVCPUStats, domainCnt, activeDomains[i]);
     int pCPU = vcpuInfo->cpu;
     unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preVCPUStats[preStatsIdx].cpuTime;
-    unsigned long long delta = vcpuInfo->cpuTime - pCPUTimStart;
+    double delta = (double) (vcpuInfo->cpuTime - pCPUTimStart);
     curVCPUStats[i].domainID = activeDomains[i];
     curVCPUStats[i].CPUTimeDelta = delta;
-    curVCPUStats[i].cpuTime =vcpuInfo->cpuTime;
+    curVCPUStats[i].cpuTime = vcpuInfo->cpuTime;
     pCPUStats[pCPU].CPUTimeDelta += delta;
     pCPUStats[pCPU].domainIdCnt++;
     pCPUStats[pCPU].domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
