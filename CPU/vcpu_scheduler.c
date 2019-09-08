@@ -28,6 +28,14 @@ int arraycmp(int* arr1, int size1, int* arr2, int size2) {
   if (size1 <= 0 || size2 <= 0) return -1;
   if (size1 != size2) return -1;
 
+  for (int i = 0; i < size1; i++) {
+    fprintf(stdout, "%d ", arr1[i]);
+  }
+  fprintf(stdout, "\n");
+  for (int i = 0; i < size1; i++) {
+    fprintf(stdout, "%d ", arr2[i]);
+  }
+
   return memcmp(arr1, arr2, size1);
 }
 
@@ -181,9 +189,9 @@ int main(int argc, char *argv[]) {
     rebalance(curPCPUStats, 4, curVCPUStats, domainCnt);
 
     fprintf(stdout, "Repinning vCPUs...\n");
-    memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
     repin(conn, curPCPUStats, prePCPUStats, 4);
 
+    memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
     for (int i = 0; i < 4; i++) {
       curPCPUStats[i].CPUTimeDelta = 0;
       curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
