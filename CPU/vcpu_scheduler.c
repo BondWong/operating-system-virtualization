@@ -128,7 +128,7 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
 int rebalanceBySorting(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int vCPUCnt) {
   qsort((void *)curVCPUInfo, vCPUCnt, sizeof(struct vCPUStats), comparator);
 
-  for (int i = 0; i < vCPUCnt; i++) fprintf(stdout, " ", curVCPUInfo[i].CPUTimeDelta);
+  for (int i = 0; i < vCPUCnt; i++) fprintf(stdout, "%d ", curVCPUInfo[i].CPUTimeDelta);
   fprintf(stdout, "\n");
 
   int k = 0;
@@ -172,8 +172,6 @@ int main(int argc, char *argv[]) {
   }
 
   int interval = atoi(argv[1]);
-
-  // get connection to hypervisor
   virConnectPtr conn;
   conn = virConnectOpen("qemu:///system");
   if (conn == NULL) {
@@ -201,7 +199,6 @@ int main(int argc, char *argv[]) {
   memcpy(prePCPUStats, curPCPUStats, PCPU_CNT * sizeof(struct pCPUStats));
 
   while(domainCnt > 0) {
-    // get all active running virtual machines
     int *activeDomains = malloc(sizeof(int) * domainCnt);
     virConnectListDomains(conn, activeDomains, domainCnt);
 
