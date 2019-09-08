@@ -51,7 +51,7 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     pCPUStats[pCPU].domainIdCnt++;
     pCPUStats[pCPU].domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
 
-    fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
+    fprintf(stdout, "guest domain %d -- %s -- vCPU usage %f assigned to pCPU %d pCPU usage %f\n",
       activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPU, pCPUStats[pCPU].CPUTimeDelta);
     free(domainInfo);
     free(vcpuInfo);
@@ -70,7 +70,7 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
     int maxPCpuId = -1;
     int minPCpuId = -1;
     for (int i = 0; i < pCPUCnt; i++) {
-      fprintf(stdout, "pCPU %d - pCPUTimeDelta %llu \n", i, pCPUStats[i].CPUTimeDelta);
+      fprintf(stdout, "pCPU %d - pCPUTimeDelta %f \n", i, pCPUStats[i].CPUTimeDelta);
       if (pCPUStats[i].CPUTimeDelta > curMax) {
         curMax = pCPUStats[i].CPUTimeDelta;
         maxPCpuId = i;
@@ -94,7 +94,7 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
     int id = pCPUStats[curFrom].domainIds[pCPUStats[curFrom].domainIdCnt - 1];
     fprintf(stdout, "looking for domain info... \n");
     int index = findById(curVCPUInfo, vCPUCnt, id);
-    fprintf(stdout, "moving workload of size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
+    fprintf(stdout, "moving workload of size: %f, domain id: %d, from pCPU: %d, to pCPU: %d \n",
       curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, curFrom, curTo);
 
     pCPUStats[curTo].CPUTimeDelta += curVCPUInfo[index].CPUTimeDelta;
