@@ -73,6 +73,7 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
     int maxIdx = -1;
     int minIdx = -1;
     for (int i = 0; i < pCPUCnt; i++) {
+      fprintf(stdout, "pCPU %d - pCPUTimeDelta %llu \n", pCPUStats[i].pCPU, Stats[i].CPUTimeDelta);
       if (pCPUStats[i].CPUTimeDelta > curMax) {
         curMax = pCPUStats[i].CPUTimeDelta;
         maxIdx = i;
