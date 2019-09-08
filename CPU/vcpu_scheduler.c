@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
     sampleDomainInfo(conn, domainCnt, activeDomains, curPCPUStats, prevVCPUInfo, curVCPUInfo);
 
     fprintf(stdout, "Running rebalance algorithm...\n");
-    rebalance(curPCPUStats, 4, curVCPUInfo, domainCnt);
+    // rebalance(curPCPUStats, 4, curVCPUInfo, domainCnt);
 
     fprintf(stdout, "Repinning vCPUs...\n");
     // repin(conn, curPCPUStats, 4);
