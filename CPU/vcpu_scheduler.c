@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
     // rebalance pCPU
     for (int i = 0; i < 4; i++) {
       pCPUStats[i].CPUTimeDelta = 0;
-      pCPUStats[i].malloc(sizeof(int) * domainCnt);
+      pCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
       pCPUStats[i].domainIdCnt = 0;
     }
     rebalance(pCPUStats, 4, curVCPUInfo, domainCnt);
