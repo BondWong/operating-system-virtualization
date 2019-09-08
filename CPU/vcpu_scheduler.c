@@ -135,7 +135,7 @@ int repin(virConnectPtr conn, pCPUStatsPtr curPCPUStats, pCPUStatsPtr prevPCPUSt
         continue;
       }
     for (int j = 0; j < curPCPUStats[i].domainIdCnt; j++) {
-      fprintf(stdout, "Repining domain %d to pCPU ... \n", curPCPUStats[i].domainIds[j], pCPU);
+      fprintf(stdout, "Repining domain %d to pCPU %d ... \n", curPCPUStats[i].domainIds[j], pCPU);
       virDomainPtr domain = virDomainLookupByID(conn, curPCPUStats[i].domainIds[j]);
       virDomainPinVcpu(domain, 0, &pCPU, 1);
     }
