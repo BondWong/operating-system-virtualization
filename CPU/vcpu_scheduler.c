@@ -45,6 +45,7 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     unsigned long long pCPUTimStart = preStatsIdx == -1 ? 0 : preVCPUStats[preStatsIdx].cpuTime;
     if (preStatsIdx != -1) fprintf(stdout, "startTime: %llu\n", preVCPUStats[preStatsIdx].cpuTime);
     double delta = (double) (vcpuInfo->cpuTime - pCPUTimStart);
+    fprintf(stdout, "%f\n", delta);
     curVCPUStats[i].domainID = activeDomains[i];
     curVCPUStats[i].CPUTimeDelta = delta;
     curVCPUStats[i].cpuTime = vcpuInfo->cpuTime;
