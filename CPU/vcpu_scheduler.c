@@ -110,7 +110,7 @@ int repin(virConnectPtr conn, pCPUStatsPtr curPCPUStats, int pCPUCnt) {
     unsigned char pCPU = 0x1 << i;
     for (int j = 0; j < curPCPUStats[i].domainIdCnt; i++) {
       virDomainPtr domain = virDomainLookupByID(conn, curPCPUStats[i].domainIds[j]);
-      virDomainPinVcpu(domain, 0, pCPU, 1);
+      virDomainPinVcpu(domain, 0, &pCPU, 1);
     }
   }
   return 0;
