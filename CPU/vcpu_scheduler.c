@@ -80,14 +80,19 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
         minPCpuId = i;
       }
     }
+
     preFrom = curFrom;
     preTo = curTo;
     curFrom = maxPCpuId;
     curTo = minPCpuId;
     if (curTo == preFrom && curFrom == preTo) shouldStop = 1;
-    if (pCPUStats[curFrom].domainIdCnt == 0) break;
+    if (pCPUStats[curFrom].domainIdCnt == 0) {
+      fprintf(stderr, "No domain id pinned to pCPU %d \n", curFrom);
+      exit(1);
+    };
 
     int id = pCPUStats[curFrom].domainIds[pCPUStats[curFrom].domainIdCnt - 1];
+    fprintf(stdout, "looking for domain info... \n");
     int index = findById(curVCPUInfo, vCPUCnt, id);
     fprintf(stdout, "moving workload of size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
       curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, curFrom, curTo);
