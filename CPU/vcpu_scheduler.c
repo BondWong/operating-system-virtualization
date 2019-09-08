@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 
+const int PCPU_CNT = 4;
+
 struct pCPUStats {
   unsigned long long CPUTimeDelta; // time delta from last interval
   int * domainIds; // id of doamins that use this pCPU
@@ -78,50 +80,40 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
 }
 
 int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int vCPUCnt) {
-  int preFrom = -1, preTo = -1, curFrom = -1, curTo = -1;
-  int shouldStop = 0;
-  while (shouldStop == 0) {
-    unsigned long long curMax = 0;
-    unsigned long long curMin = -1;
-    int maxPCpuId = -1;
-    int minPCpuId = -1;
-    for (int i = 0; i < pCPUCnt; i++) {
-      fprintf(stdout, "pCPU %d - pCPUTimeDelta %llu \n", i, pCPUStats[i].CPUTimeDelta);
-      if (pCPUStats[i].CPUTimeDelta > curMax) {
-        curMax = pCPUStats[i].CPUTimeDelta;
-        maxPCpuId = i;
-      }
-      if (curMin == -1 || pCPUStats[i].CPUTimeDelta < curMin) {
-        curMin = pCPUStats[i].CPUTimeDelta;
-        minPCpuId = i;
-      }
+  int from = -1, to = -1;
+  unsigned long long curMax = 0;
+  unsigned long long curMin = -1;
+  for (int i = 0; i < pCPUCnt; i++) {
+    fprintf(stdout, "pCPU %d - pCPUTimeDelta %llu \n", i, pCPUStats[i].CPUTimeDelta);
+    if (pCPUStats[i].CPUTimeDelta > curMax) {
+      curMax = pCPUStats[i].CPUTimeDelta;
+      from = i;
     }
-
-    preFrom = curFrom;
-    preTo = curTo;
-    curFrom = maxPCpuId;
-    curTo = minPCpuId;
-    if (curTo == preFrom && curFrom == preTo) shouldStop = 1;
-    if (pCPUStats[curFrom].domainIdCnt == 0) {
-      fprintf(stderr, "No domain id pinned to pCPU %d \n", curFrom);
-      exit(1);
-    };
-
-    int id = pCPUStats[curFrom].domainIds[pCPUStats[curFrom].domainIdCnt - 1];
-    fprintf(stdout, "looking for domain info... \n");
-    int index = findById(curVCPUInfo, vCPUCnt, id);
-    fprintf(stdout, "moving workload of size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
-      curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, curFrom, curTo);
-
-    pCPUStats[curTo].CPUTimeDelta += curVCPUInfo[index].CPUTimeDelta;
-    pCPUStats[curTo].domainIdCnt++;
-    pCPUStats[curTo].domainIds[pCPUStats[curTo].domainIdCnt - 1] = id;
-    pCPUStats[curFrom].CPUTimeDelta -= curVCPUInfo[index].CPUTimeDelta;
-    pCPUStats[curFrom].domainIdCnt--;
-
-    fprintf(stdout, "done moving workflow of domain id: %d, from pCPU: %d, to pCPU: %d \n",
-      pCPUStats[curTo].domainIds[pCPUStats[curTo].domainIdCnt - 1], curFrom, curTo);
+    if (curMin == -1 || pCPUStats[i].CPUTimeDelta < curMin) {
+      curMin = pCPUStats[i].CPUTimeDelta;
+      to = i;
+    }
   }
+
+  if (pCPUStats[from].domainIdCnt == 0) {
+    fprintf(stderr, "No domain id pinned to pCPU %d \n", from);
+    exit(1);
+  };
+
+  int id = pCPUStats[from].domainIds[pCPUStats[from].domainIdCnt - 1];
+  fprintf(stdout, "looking for domain info... \n");
+  int index = findById(curVCPUInfo, vCPUCnt, id);
+  fprintf(stdout, "moving workload of size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
+    curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, from, to);
+
+  pCPUStats[to].CPUTimeDelta += curVCPUInfo[index].CPUTimeDelta;
+  pCPUStats[to].domainIdCnt++;
+  pCPUStats[to].domainIds[pCPUStats[to].domainIdCnt - 1] = id;
+  pCPUStats[from].CPUTimeDelta -= curVCPUInfo[index].CPUTimeDelta;
+  pCPUStats[from].domainIdCnt--;
+
+  fprintf(stdout, "done moving workflow of domain id: %d, from pCPU: %d, to pCPU: %d \n",
+    pCPUStats[to].domainIds[pCPUStats[to].domainIdCnt - 1], from, to);
 
   return 0;
 }
@@ -169,14 +161,14 @@ int main(int argc, char *argv[]) {
   vCPUStatsPtr prevVCPUStats = malloc(sizeof(struct pCPUStats) * domainCnt);
   memcpy(prevVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
 
-  pCPUStatsPtr curPCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-  pCPUStatsPtr prePCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-  for (int i = 0; i < 4; i++) {
+  pCPUStatsPtr curPCPUStats = malloc(sizeof(struct pCPUStats) * PCPU_CNT);
+  pCPUStatsPtr prePCPUStats = malloc(sizeof(struct pCPUStats) * PCPU_CNT);
+  for (int i = 0; i < PCPU_CNT; i++) {
     curPCPUStats[i].CPUTimeDelta = 0;
     curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
     curPCPUStats[i].domainIdCnt = 0;
   }
-  memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
+  memcpy(prePCPUStats, curPCPUStats, PCPU_CNT * sizeof(struct pCPUStats));
 
   while(domainCnt > 0) {
     // get all active running virtual machines
@@ -186,14 +178,29 @@ int main(int argc, char *argv[]) {
     fprintf(stdout, "Sampling pCPU stats...\n");
     sampleDomainInfo(conn, domainCnt, activeDomains, curPCPUStats, prevVCPUStats, curVCPUStats);
 
-    fprintf(stdout, "Running rebalance algorithm...\n");
-    rebalance(curPCPUStats, 4, curVCPUStats, domainCnt);
+    unsigned long long averageDelta = 0;
+    for (int i = 0; i < PCPU_CNT; i++) averageDelta += curPCPUStats[i].CPUTimeDelta;
+    averageDelta /= 4;
+    int rebalanceNeeded = 0;
+    for (int i = 0; i < PCPU_CNT; i++) {
+      if (abs(curPCPUStats[i].CPUTimeDelta - averageDelta) > 0.3 * averageDelta) {
+        rebalanceNeeded = 1;
+        break;
+      }
+    }
 
-    fprintf(stdout, "Repinning vCPUs...\n");
-    repin(conn, curPCPUStats, prePCPUStats, 4);
+    if (rebalanceNeeded == 1) {
+      fprintf(stdout, "Running rebalance algorithm...\n");
+      rebalance(curPCPUStats, PCPU_CNT, curVCPUStats, domainCnt);
 
-    memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
-    for (int i = 0; i < 4; i++) {
+      fprintf(stdout, "Repinning vCPUs...\n");
+      repin(conn, curPCPUStats, prePCPUStats, PCPU_CNT);
+    } else {
+      fprintf(stdout, "Already balance, no action ... \n");
+    }
+
+    memcpy(prePCPUStats, curPCPUStats, PCPU_CNT * sizeof(struct pCPUStats));
+    for (int i = 0; i < PCPU_CNT; i++) {
       curPCPUStats[i].CPUTimeDelta = 0;
       curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
       curPCPUStats[i].domainIdCnt = 0;
