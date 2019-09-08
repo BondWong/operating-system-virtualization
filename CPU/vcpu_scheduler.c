@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "utils.h"
+#include "../utils/utils.h"
 
 struct pCPUStats {
   unsigned long long CPUTimeDelta; // time delta from last interval

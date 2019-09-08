@@ -9,7 +9,6 @@ all: clean cpu
 
 cpu: CPU/vcpu_scheduler.c utils/utils.c
 	$(CC) -o bin/vcpu_scheduler $< $(CFLAGS) $(LDFLAGS)
-# default linking command: $(CC) $(LDFLAGS) <foo>.o -o <foo>
 
 clean:
 	$(RM) -rf bin/*
