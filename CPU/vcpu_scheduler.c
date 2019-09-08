@@ -57,9 +57,7 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     free(domainInfo);
     free(vcpuInfo);
   }
-  fprintf(stdout, "%llu\n", preVCPUStats[0].cpuTime);
   memcpy(preVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
-  fprintf(stdout, "%llu\n", preVCPUStats[0].cpuTime);
 
   return 0;
 }
@@ -168,7 +166,7 @@ int main(int argc, char *argv[]) {
     sampleDomainInfo(conn, domainCnt, activeDomains, curPCPUStats, prevVCPUStats, curVCPUStats);
 
     fprintf(stdout, "Running rebalance algorithm...\n");
-    // rebalance(curPCPUStats, 4, curVCPUStats, domainCnt);
+    rebalance(curPCPUStats, 4, curVCPUStats, domainCnt);
 
     fprintf(stdout, "Repinning vCPUs...\n");
     // repin(conn, curPCPUStats, 4);
