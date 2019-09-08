@@ -49,7 +49,6 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     curVCPUStats[i].cpuTime =vcpuInfo->cpuTime;
     pCPUStats[pCPU].CPUTimeDelta += delta;
     pCPUStats[pCPU].domainIdCnt++;
-    pCPUStats[pCPU].domainIds = malloc(sizeof(int) * domainCnt);
     pCPUStats[pCPU].domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
 
     fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
@@ -135,6 +134,11 @@ int main(int argc, char *argv[]) {
     // get pCPU stats
     sampleDomainInfo(conn, domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
     // rebalance pCPU
+    for (int i = 0; i < 4; i++) {
+      pCPUStats[i].CPUTimeDelta = 0;
+      pCPUStats[i].malloc(sizeof(int) * domainCnt);
+      pCPUStats[i].domainIdCnt = 0;
+    }
     rebalance(pCPUStats, 4, curVCPUInfo, domainCnt);
     free(pCPUStats);
     sleep(interval);
