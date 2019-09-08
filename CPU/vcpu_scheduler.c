@@ -42,6 +42,13 @@ int arraycmp(int* arr1, int size1, int* arr2, int size2) {
   return memcmp(arr1, arr2, size1);
 }
 
+int comparator(const void* p1, const void* p2) {
+  vCPUStatsPtr p = (vCPUStatsPtr)p1;
+  vCPUStatsPtr q = (vCPUStatsPtr)p2;
+
+  return p->CPUTimeDelta - q->CPUTimeDelta;
+}
+
 int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
   pCPUStatsPtr pCPUStats, vCPUStatsPtr preVCPUStats, vCPUStatsPtr curVCPUStats) {
   // write cur domain info to prev domain info,  and update domain info
@@ -114,6 +121,22 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
 
   fprintf(stdout, "done moving workflow of domain id: %d, from pCPU: %d, to pCPU: %d \n",
     pCPUStats[to].domainIds[pCPUStats[to].domainIdCnt - 1], from, to);
+
+  return 0;
+}
+
+int rebalanceBySorting(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int vCPUCnt) {
+  qsort((void *)curVCPUInfo, vCPUCnt, sizeof(struct vCPUStats), comparator);
+  int k = 0;
+  for (int i = 0, j = vCPUCnt - 1; i <= j; i++, j--) {
+    pCPUStats[k].CPUTimeDelta += (curVCPUInfo[i].CPUTimeDelta+ curVCPUInfo[j].CPUTimeDelta);
+    pCPUStats[k].domainIdCnt++;
+    pCPUStats[k].domainIds[pCPUStats[k].domainIdCnt - 1] = curVCPUInfo[i].domainID;
+    pCPUStats[k].domainIdCnt++;
+    pCPUStats[k].domainIds[pCPUStats[k].domainIdCnt - 1] = curVCPUInfo[j].domainID;
+    k++;
+    k %= PCPU_CNT;
+  }
 
   return 0;
 }
@@ -191,7 +214,8 @@ int main(int argc, char *argv[]) {
 
     if (rebalanceNeeded == 1) {
       fprintf(stdout, "Running rebalance algorithm...\n");
-      rebalance(curPCPUStats, PCPU_CNT, curVCPUStats, domainCnt);
+      // rebalance(curPCPUStats, PCPU_CNT, curVCPUStats, domainCnt);
+      rebalanceBySorting(curPCPUStats, PCPU_CNT, curVCPUStats, domainCnt);
 
       fprintf(stdout, "Repinning vCPUs...\n");
       repin(conn, curPCPUStats, prePCPUStats, PCPU_CNT);
