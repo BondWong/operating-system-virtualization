@@ -1,5 +1,5 @@
 #include <string.h>
-#include "utils/utils.h"
+#include "utils.h"
 
 char *strrev(char *str) {
   char *p1, *p2;
