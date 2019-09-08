@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 
+#include "utils/utils.h"
+
 struct pCPUStats {
   unsigned long long CPUTimeDelta; // time delta from last interval
   int * domainIds; // id of doamins that use this pCPU
@@ -110,10 +112,14 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
   return 0;
 }
 
-int repin(virConnectPtr conn, pCPUStatsPtr curPCPUStats, int pCPUCnt) {
+int repin(virConnectPtr conn, pCPUStatsPtr curPCPUStats, pCPUStatsPtr prevPCPUStats, int pCPUCnt) {
   for (int i = 0; i < pCPUCnt; i++) {
     unsigned char pCPU = 0x1 << i;
-    fprintf(stdout, "domain cnt %d\n", curPCPUStats[i].domainIdCnt);
+    if(arraycmp(curPCPUStats[i], curPCPUStats[i].domainIdCnt,
+      prevPCPUStats[i], prevPCPUStats[i].domainIdCnt) == 0) {
+        fprintf(stdout, "No need to repining, skipping ... \n");
+        continue;
+      }
     for (int j = 0; j < curPCPUStats[i].domainIdCnt; j++) {
       fprintf(stdout, "Repining domain %d ... \n", curPCPUStats[i].domainIds[j]);
       virDomainPtr domain = virDomainLookupByID(conn, curPCPUStats[i].domainIds[j]);
@@ -148,18 +154,20 @@ int main(int argc, char *argv[]) {
   }
   vCPUStatsPtr prevVCPUStats = malloc(sizeof(struct pCPUStats) * domainCnt);
   memcpy(prevVCPUStats, curVCPUStats, sizeof(struct vCPUStats) * domainCnt);
+
+  pCPUStatsPtr curPCPUStats = malloc(sizeof(struct pCPUStats) * 4);
+  pCPUStatsPtr prePCPUStats = malloc(sizeof(struct pCPUStats) * 4);
+  for (int i = 0; i < 4; i++) {
+    curPCPUStats[i].CPUTimeDelta = 0;
+    curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
+    curPCPUStats[i].domainIdCnt = 0;
+  }
+  memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
+
   while(domainCnt > 0) {
     // get all active running virtual machines
     int *activeDomains = malloc(sizeof(int) * domainCnt);
     virConnectListDomains(conn, activeDomains, domainCnt);
-    pCPUStatsPtr curPCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-    // pCPUStatsPtr prePCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-    for (int i = 0; i < 4; i++) {
-      curPCPUStats[i].CPUTimeDelta = 0;
-      curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
-      curPCPUStats[i].domainIdCnt = 0;
-    }
-    // memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
 
     fprintf(stdout, "Sampling pCPU stats...\n");
     sampleDomainInfo(conn, domainCnt, activeDomains, curPCPUStats, prevVCPUStats, curVCPUStats);
@@ -168,15 +176,17 @@ int main(int argc, char *argv[]) {
     rebalance(curPCPUStats, 4, curVCPUStats, domainCnt);
 
     fprintf(stdout, "Repinning vCPUs...\n");
-    repin(conn, curPCPUStats, 4);
+    memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
+    repin(conn, curPCPUStats, prePCPUStats, 4);
 
     if (curPCPUStats != NULL) free(curPCPUStats);
-    // if (prePCPUStats != NULL) free(prePCPUStats);
     sleep(interval);
   }
 
   virConnectClose(conn);
   free(curVCPUStats);
   free(prevVCPUStats);
+  if (curPCPUStats != NULL) free(curPCPUStats);
+  if (prePCPUStats != NULL) free(prePCPUStats);
   return 0;
 }
