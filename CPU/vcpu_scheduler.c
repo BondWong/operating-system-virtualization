@@ -115,8 +115,8 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
 int repin(virConnectPtr conn, pCPUStatsPtr curPCPUStats, pCPUStatsPtr prevPCPUStats, int pCPUCnt) {
   for (int i = 0; i < pCPUCnt; i++) {
     unsigned char pCPU = 0x1 << i;
-    if(arraycmp(curPCPUStats[i], curPCPUStats[i].domainIdCnt,
-      prevPCPUStats[i], prevPCPUStats[i].domainIdCnt) == 0) {
+    if(arraycmp(curPCPUStats[i].domainIds, curPCPUStats[i].domainIdCnt,
+      prevPCPUStats[i].domainIds, prevPCPUStats[i].domainIdCnt) == 0) {
         fprintf(stdout, "No need to repining, skipping ... \n");
         continue;
       }
