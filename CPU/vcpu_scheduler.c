@@ -6,7 +6,6 @@
 
 struct pCPUStats {
   unsigned long long CPUTimeDelta; // time delta from last interval
-  int pCPU; // pCPU number
   int * domainIds; // id of doamins that use this pCPU
   int domainIdCnt;
 };
@@ -49,13 +48,12 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
     curVCPUStats[i].CPUTimeDelta = delta;
     curVCPUStats[i].cpuTime =vcpuInfo->cpuTime;
     pCPUStats[pCPU].CPUTimeDelta += delta;
-    pCPUStats[pCPU].pCPU = pCPU;
     pCPUStats[pCPU].domainIdCnt++;
     pCPUStats[pCPU].domainIds = malloc(sizeof(int) * domainCnt);
     pCPUStats[pCPU].domainIds[pCPUStats[pCPU].domainIdCnt - 1] = activeDomains[i];
 
     fprintf(stdout, "guest domain %d -- %s -- vCPU usage %llu assigned to pCPU %d pCPU usage %llu\n",
-      activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPUStats[pCPU].pCPU, pCPUStats[pCPU].CPUTimeDelta);
+      activeDomains[i], virDomainGetName(domain), curVCPUStats[i].CPUTimeDelta, pCPU, pCPUStats[pCPU].CPUTimeDelta);
     free(domainInfo);
     free(vcpuInfo);
   }
@@ -70,30 +68,30 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
   while (shouldStop == 0) {
     unsigned long long curMax = 0;
     unsigned long long curMin = -1;
-    int maxIdx = -1;
-    int minIdx = -1;
+    int maxPCpuId = -1;
+    int minPCpuId = -1;
     for (int i = 0; i < pCPUCnt; i++) {
-      fprintf(stdout, "pCPU %d - pCPUTimeDelta %llu \n", pCPUStats[i].pCPU, pCPUStats[i].CPUTimeDelta);
+      fprintf(stdout, "pCPU %d - pCPUTimeDelta %llu \n", i, pCPUStats[i].CPUTimeDelta);
       if (pCPUStats[i].CPUTimeDelta > curMax) {
         curMax = pCPUStats[i].CPUTimeDelta;
-        maxIdx = i;
+        maxPCpuId = i;
       }
       if (curMin == -1 || pCPUStats[i].CPUTimeDelta < curMin) {
         curMin = pCPUStats[i].CPUTimeDelta;
-        minIdx = i;
+        minPCpuId = i;
       }
     }
     preFrom = curFrom;
     preTo = curTo;
-    curFrom = pCPUStats[maxIdx].pCPU;
-    curTo = pCPUStats[minIdx].pCPU;
+    curFrom = maxPCpuId;
+    curTo = minPCpuId;
     if (curTo == preFrom && curFrom == preTo) shouldStop = 1;
     if (pCPUStats[curFrom].domainIdCnt == 0) break;
 
     int id = pCPUStats[curFrom].domainIds[pCPUStats[curFrom].domainIdCnt - 1];
     int index = findById(curVCPUInfo, vCPUCnt, id);
     fprintf(stdout, "workload size: %llu, domain id: %d, from pCPU: %d, to pCPU: %d \n",
-      curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, pCPUStats[curFrom].pCPU, pCPUStats[curTo].pCPU);
+      curVCPUInfo[index].CPUTimeDelta, curVCPUInfo[index].domainID, curFrom, curTo);
 
     pCPUStats[curTo].CPUTimeDelta += curVCPUInfo[index].CPUTimeDelta;
     pCPUStats[curTo].domainIdCnt++;
@@ -102,7 +100,7 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
     pCPUStats[curFrom].domainIdCnt--;
 
     fprintf(stdout, "done moving workflow of domain id: %d, from pCPU: %d, to pCPU: %d \n",
-      pCPUStats[curTo].domainIds[pCPUStats[curTo].domainIdCnt - 1], pCPUStats[curFrom].pCPU, pCPUStats[curTo].pCPU);
+      pCPUStats[curTo].domainIds[pCPUStats[curTo].domainIdCnt - 1], curFrom, curTo);
   }
 
   return 0;
