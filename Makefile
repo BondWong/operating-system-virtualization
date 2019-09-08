@@ -7,7 +7,7 @@ LDFLAGS = -lpthread -lvirt # default is LDFLAGS = [blank]
 
 all: clean cpu
 
-cpu: CPU/vcpu_scheduler.c
+cpu: CPU/vcpu_scheduler.c utils/utils.c
 	$(CC) -o bin/vcpu_scheduler $< $(CFLAGS) $(LDFLAGS)
 # default linking command: $(CC) $(LDFLAGS) <foo>.o -o <foo>
 
