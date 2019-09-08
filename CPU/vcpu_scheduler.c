@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
     rebalance(curPCPUStats, 4, curVCPUStats, domainCnt);
 
     fprintf(stdout, "Repinning vCPUs...\n");
-    // repin(conn, curPCPUStats, 4);
+    repin(conn, curPCPUStats, 4);
 
     if (curPCPUStats != NULL) free(curPCPUStats);
     // if (prePCPUStats != NULL) free(prePCPUStats);
