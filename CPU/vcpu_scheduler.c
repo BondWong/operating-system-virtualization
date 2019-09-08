@@ -105,6 +105,17 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
   return 0;
 }
 
+int repin(virConnectPtr conn, pCPUStatsPtr curPCPUStats, int pCPUCnt) {
+  for (int i = 0; i < pCPUCnt; i++) {
+    unsigned char pCPU = 0x1 << i;
+    for (int j = 0; j < curPCPUStats[i].domainIdCnt; i++) {
+      virDomainPtr domain = virDomainLookupByID(conn, curPCPUStats[i].domainIds[j]);
+      virDomainPinVcpu(domain, 0, pCPU, 1);
+    }
+  }
+  return 0;
+}
+
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     fprintf(stderr, "Error: Invalid arugment\n");
@@ -124,29 +135,35 @@ int main(int argc, char *argv[]) {
   int domainCnt = virConnectNumOfDomains(conn);
   vCPUStatsPtr curVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
   vCPUStatsPtr prevVCPUInfo = malloc(sizeof(struct pCPUStats) * domainCnt);
+  pCPUStatsPtr curPCPUStats = malloc(sizeof(struct pCPUStats) * 4);
+  // pCPUStatsPtr prePCPUStats = malloc(sizeof(struct pCPUStats) * 4);
+  for (int i = 0; i < 4; i++) {
+    curPCPUStats[i].CPUTimeDelta = 0;
+    curPCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
+    curPCPUStats[i].domainIdCnt = 0;
+  }
   while(domainCnt > 0) {
     // get all active running virtual machines
     int *activeDomains = malloc(sizeof(int) * domainCnt);
     virConnectListDomains(conn, activeDomains, domainCnt);
+    // memcpy(prePCPUStats, curPCPUStats, 4 * sizeof(struct pCPUStats));
 
     fprintf(stdout, "Sampling pCPU stats...\n");
-    pCPUStatsPtr pCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-    for (int i = 0; i < 4; i++) {
-      pCPUStats[i].CPUTimeDelta = 0;
-      pCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
-      pCPUStats[i].domainIdCnt = 0;
-    }
+    sampleDomainInfo(conn, domainCnt, activeDomains, curPCPUStats, prevVCPUInfo, curVCPUInfo);
 
-    // get pCPU stats
-    sampleDomainInfo(conn, domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
-    // rebalance pCPU
-    rebalance(pCPUStats, 4, curVCPUInfo, domainCnt);
-    free(pCPUStats);
+    fprintf(stdout, "Running rebalance algorithm...\n");
+    rebalance(curPCPUStats, 4, curVCPUInfo, domainCnt);
+
+    fprintf(stdout, "Repinning vCPUs...\n");
+    repin(conn, curPCPUStats, 4);
+
     sleep(interval);
   }
 
   virConnectClose(conn);
   if (curVCPUInfo != NULL) free(curVCPUInfo);
   if (prevVCPUInfo != NULL) free(prevVCPUInfo);
+  if (curPCPUStats != NULL) free(curPCPUStats);
+  // if (prePCPUStats != NULL) free(prePCPUStats);
   return 0;
 }
