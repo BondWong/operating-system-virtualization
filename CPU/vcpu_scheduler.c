@@ -131,14 +131,15 @@ int main(int argc, char *argv[]) {
 
     fprintf(stdout, "Sampling pCPU stats...\n");
     pCPUStatsPtr pCPUStats = malloc(sizeof(struct pCPUStats) * 4);
-    // get pCPU stats
-    sampleDomainInfo(conn, domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
-    // rebalance pCPU
     for (int i = 0; i < 4; i++) {
       pCPUStats[i].CPUTimeDelta = 0;
       pCPUStats[i].domainIds = malloc(sizeof(int) * domainCnt);
       pCPUStats[i].domainIdCnt = 0;
     }
+    
+    // get pCPU stats
+    sampleDomainInfo(conn, domainCnt, activeDomains, pCPUStats, prevVCPUInfo, curVCPUInfo);
+    // rebalance pCPU
     rebalance(pCPUStats, 4, curVCPUInfo, domainCnt);
     free(pCPUStats);
     sleep(interval);
