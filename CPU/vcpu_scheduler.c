@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "../utils/utils.h"
-
 struct pCPUStats {
   unsigned long long CPUTimeDelta; // time delta from last interval
   int * domainIds; // id of doamins that use this pCPU
@@ -24,6 +22,13 @@ typedef struct vCPUStats* vCPUStatsPtr;
 int findById(vCPUStatsPtr vCPUStats, int size, int id) {
   for (int i = 0; i < size; i++) if (vCPUStats[i].domainID == id) return i;
   return -1;
+}
+
+int arraycmp(int* arr1, int size1, int* arr2, int size2) {
+  if (size1 <= 0 || size2 <= 0) return -1;
+  if (size1 != size2) return -1;
+
+  return memcmp(arr1, arr2, size1);
 }
 
 int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
