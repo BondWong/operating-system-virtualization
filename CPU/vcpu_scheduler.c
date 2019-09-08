@@ -103,6 +103,8 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
     fprintf(stdout, "done moving workflow of domain id: %d, from pCPU: %d, to pCPU: %d \n",
       pCPUStats[curTo].domainIds[pCPUStats[curTo].domainIdCnt - 1], pCPUStats[curFrom].pCPU, pCPUStats[curTo].pCPU);
   }
+
+  return 0;
 }
 
 int main(int argc, char *argv[]) {
