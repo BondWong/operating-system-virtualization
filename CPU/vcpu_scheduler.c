@@ -127,13 +127,20 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
 
 int rebalanceBySorting(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int vCPUCnt) {
   qsort((void *)curVCPUInfo, vCPUCnt, sizeof(struct vCPUStats), comparator);
+
+  for (int i = 0; i < vCPUCnt; i++) fprintf(stdout, " ", curVCPUInfo[i].CPUTimeDelta);
+  fprintf(stdout, "\n");
+
   int k = 0;
   for (int i = 0, j = vCPUCnt - 1; i <= j; i++, j--) {
-    pCPUStats[k].CPUTimeDelta += (curVCPUInfo[i].CPUTimeDelta+ curVCPUInfo[j].CPUTimeDelta);
+    pCPUStats[k].CPUTimeDelta += curVCPUInfo[i].CPUTimeDelta;
     pCPUStats[k].domainIdCnt++;
     pCPUStats[k].domainIds[pCPUStats[k].domainIdCnt - 1] = curVCPUInfo[i].domainID;
-    pCPUStats[k].domainIdCnt++;
-    pCPUStats[k].domainIds[pCPUStats[k].domainIdCnt - 1] = curVCPUInfo[j].domainID;
+    if (i != j) {
+      pCPUStats[k].CPUTimeDelta += curVCPUInfo[j].CPUTimeDelta;
+      pCPUStats[k].domainIdCnt++;
+      pCPUStats[k].domainIds[pCPUStats[k].domainIdCnt - 1] = curVCPUInfo[j].domainID;
+    }
     k++;
     k %= PCPU_CNT;
   }
