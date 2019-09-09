@@ -8,7 +8,7 @@ LDFLAGS = -lpthread -lvirt # default is LDFLAGS = [blank]
 all: clean cpu
 
 cpu: vcpu_scheduler.c
-	$(CC) -o bin/vcpu_scheduler $< $(CFLAGS) $(LDFLAGS)
+	$(CC) -o vcpu_scheduler $< $(CFLAGS) $(LDFLAGS)
 
 clean:
-	$(RM) -rf bin/*
+	$(RM) -rf vcpu_scheduler
