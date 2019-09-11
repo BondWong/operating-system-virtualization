@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
     // sort memstat of each VMs in desneding order
     fprintf(stdout, "%s\n", "Getting domain memeory stat");
     MemStatPtr memStats = malloc(sizeof(struct MemStat) * domainCnt);
-    getAndSortMemStat(memStats, activeDomains, domainCnt);
+    getAndSortMemStat(conn, memStats, activeDomains, domainCnt);
     // iterate each, collect memory from those have wasteful memory, assign to those are starving
     // during the iteration, if memory remain is negative, start using hypervisor memory
     // in the end, if remaining is positive, assign back to hypervisor
