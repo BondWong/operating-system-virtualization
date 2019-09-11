@@ -21,11 +21,11 @@ int comparator(const void* p1, const void* p2) {
   return q->memory - p->memory;
 }
 
-void getAndSortMemStat(MemStatPtr memStats, const int* domainId, int domainCnt) {
+void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activeDomains, int domainCnt, int interval) {
   for (int i = 0; i < domainCnt; i++) {
     virDomainPtr domain = virDomainLookupByID(conn, activeDomains[i]);
     virDomainSetMemoryStatsPeriod(domain, interval, 1);
-    virDomainInfoPtr domainInfo = malloc(sizeof(struct virDomainInfo));
+    virDomainInfoPtr domainInfo = malloc(sizeof(virDomainInfo));
     virDomainGetInfo(domain, domainInfo);
     virDomainMemoryStatStruct memStatStruct[VIR_DOMAIN_MEMORY_STAT_NR];
     virDomainMemoryStats(domain, memStatStruct, VIR_DOMAIN_MEMORY_STAT_NR, 0);
@@ -52,7 +52,7 @@ void getAndSortMemStat(MemStatPtr memStats, const int* domainId, int domainCnt) 
         // hypervisor inflats balloon to reclaim memory
         unsigned long newMemorySize = memStats[i].domainInfo->maxMem - reclaim;
         fprintf(stdout, "Reclaiming memeory %lu from domain %s \n", reclaim, virDomainGetName(memStats[i].domain));
-        virDomainSetMaxMemory(memStats.domain, newMemorySize);
+        virDomainSetMaxMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", newMemorySize);
       } else {
         unsigned long assign = ABUNDANCE_THRESHOLD - memStats[i].memory;
@@ -65,7 +65,7 @@ void getAndSortMemStat(MemStatPtr memStats, const int* domainId, int domainCnt) 
         // hypervisor deflats balloon to assign memory
         unsigned long newMemorySize = memStats[i].domainInfo->maxMem + assign;
         fprintf(stdout, "Assigning memeory %lu from domain %s \n", assign, virDomainGetName(memStats[i].domain));
-        virDomainSetMaxMemory(memStats.domain, newMemorySize);
+        virDomainSetMaxMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", newMemorySize);
       }
     }
