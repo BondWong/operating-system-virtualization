@@ -4,8 +4,9 @@
 #include <unistd.h>
 #include <string.h>
 
-const unsigned long ABUNDANCE_THRESHOLD = 0.6;
+const float ABUNDANCE_THRESHOLD = 0.6;
 const unsigned long HOST_MINIMUM = 200 * 1024;
+const float MEMORY_CHANGE_RATE = 0.1;
 
 struct MemStat {
   virDomainPtr domain;
@@ -47,15 +48,15 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
     for (int i = 0; i < domainCnt; i++) {
       unsigned long threshold = ABUNDANCE_THRESHOLD * memStats[i].domainInfo->maxMem;
       if (memStats[i].memory > threshold) {
-        unsigned long reclaim = memStats[i].memory - threshold;
+        unsigned long reclaim = memStats[i].memory * MEMORY_CHANGE_RATE;
         remain += reclaim;
         // hypervisor inflats balloon to reclaim memory
-        unsigned long newMemorySize = memStats[i].domainInfo->maxMem - reclaim;
+        unsigned long newMemorySize = memStats[i].memory - reclaim;
         fprintf(stdout, "Reclaiming memeory %lu from domain %s \n", reclaim, virDomainGetName(memStats[i].domain));
-        virDomainSetMaxMemory(memStats[i].domain, newMemorySize);
+        virDomainSetMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", newMemorySize);
       } else {
-        unsigned long assign = threshold - memStats[i].memory;
+        unsigned long assign = memStats[i].memory * MEMORY_CHANGE_RATE;
         remain -= assign;
         // if hypervisor itself is starving, don't assign
         if (remain <= 0 && freeMemory <= HOST_MINIMUM) {
@@ -63,9 +64,9 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
           break;
         }
         // hypervisor deflats balloon to assign memory
-        unsigned long newMemorySize = memStats[i].domainInfo->maxMem + assign;
+        unsigned long newMemorySize = memStats[i].memory + assign;
         fprintf(stdout, "Assigning memeory %lu from domain %s \n", assign, virDomainGetName(memStats[i].domain));
-        virDomainSetMaxMemory(memStats[i].domain, newMemorySize);
+        virDomainSetMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", newMemorySize);
       }
     }
@@ -99,7 +100,7 @@ int main(int argc, char *argv[]) {
     // in the end, if remaining is positive, assign back to hypervisor
     fprintf(stdout, "%s\n", "Rebalancing domain memeory");
     unsigned long long freeMemory = virNodeGetFreeMemory(conn) / 1024;
-    // rebalanceMemory(memStats, activeDomains, domainCnt, freeMemory);
+    rebalanceMemory(memStats, activeDomains, domainCnt, freeMemory);
     free(memStats);
     sleep(interval);
   }
