@@ -4,9 +4,9 @@
 #include <unistd.h>
 #include <string.h>
 
-const float ABUNDANCE_THRESHOLD = 0.2;
+const float ABUNDANCE_THRESHOLD = 100 * 1024;
 const unsigned long HOST_MINIMUM = 200 * 1024;
-const float MEMORY_CHANGE_RATE = 0.1;
+const float MEMORY_CHANGE_DELTA = 50 * 1024;
 
 struct MemStat {
   virDomainPtr domain;
@@ -46,26 +46,23 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
   void rebalanceMemory(MemStatPtr memStats, int *activeDomains, int domainCnt, unsigned long long freeMemory) {
     unsigned long remain = 0;
     for (int i = 0; i < domainCnt; i++) {
-      unsigned long threshold = ABUNDANCE_THRESHOLD * memStats[i].domainInfo->maxMem;
-      if (memStats[i].memory > threshold) {
-        unsigned long reclaim = memStats[i].domainInfo->maxMem * MEMORY_CHANGE_RATE;
-        remain += reclaim;
+      if (memStats[i].memory > ABUNDANCE_THRESHOLD) {
+        remain += MEMORY_CHANGE_DELTA;
         // hypervisor inflats balloon to reclaim memory
-        unsigned long newMemorySize = memStats[i].domainInfo->memory - reclaim;
-        fprintf(stdout, "Reclaiming memeory %lu from domain %s \n", reclaim, virDomainGetName(memStats[i].domain));
+        unsigned long newMemorySize = memStats[i].domainInfo->memory - MEMORY_CHANGE_DELTA;
+        fprintf(stdout, "Reclaiming memeory %lu from domain %s \n", MEMORY_CHANGE_DELTA, virDomainGetName(memStats[i].domain));
         int res = virDomainSetMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", memStats[i].domainInfo->memory);
       } else {
-        unsigned long assign = memStats[i].domainInfo->maxMem * MEMORY_CHANGE_RATE;
-        remain -= assign;
+        remain -= MEMORY_CHANGE_DELTA;
         // if hypervisor itself is starving, don't assign
         if (remain <= 0 && freeMemory <= HOST_MINIMUM) {
           fprintf(stdout, "Insufficient memory in the hypervisor skipping \n");
           break;
         }
         // hypervisor deflats balloon to assign memory
-        unsigned long newMemorySize = memStats[i].domainInfo->memory + assign;
-        fprintf(stdout, "Assigning memeory %lu to domain %s \n", assign, virDomainGetName(memStats[i].domain));
+        unsigned long newMemorySize = memStats[i].domainInfo->memory + MEMORY_CHANGE_DELTA;
+        fprintf(stdout, "Assigning memeory %lu to domain %s \n", MEMORY_CHANGE_DELTA, virDomainGetName(memStats[i].domain));
         int res = virDomainSetMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", memStats[i].domainInfo->memory);
       }
