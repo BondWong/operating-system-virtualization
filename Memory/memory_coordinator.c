@@ -51,7 +51,7 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
         // hypervisor inflats balloon to reclaim memory
         unsigned long newMemorySize = memStats[i].domainInfo->memory - MEMORY_CHANGE_DELTA;
         fprintf(stdout, "Reclaiming memeory %lu from domain %s \n", MEMORY_CHANGE_DELTA, virDomainGetName(memStats[i].domain));
-        int res = virDomainSetMemory(memStats[i].domain, newMemorySize);
+        virDomainSetMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", memStats[i].domainInfo->memory);
       } else {
         remain -= MEMORY_CHANGE_DELTA;
@@ -63,7 +63,7 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
         // hypervisor deflats balloon to assign memory
         unsigned long newMemorySize = memStats[i].domainInfo->memory + MEMORY_CHANGE_DELTA;
         fprintf(stdout, "Assigning memeory %lu to domain %s \n", MEMORY_CHANGE_DELTA, virDomainGetName(memStats[i].domain));
-        int res = virDomainSetMemory(memStats[i].domain, newMemorySize);
+        virDomainSetMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", memStats[i].domainInfo->memory);
       }
     }
