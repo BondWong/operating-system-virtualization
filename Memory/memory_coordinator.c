@@ -67,7 +67,7 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
         // hypervisor deflats balloon to assign memory
         unsigned long newMemorySize = memStats[i].memory + assign;
         fprintf(stdout, "Assigning memeory %lu to domain %s \n", assign, virDomainGetName(memStats[i].domain));
-        virDomainSetMemory(memStats[i].domain, newMemorySize);
+        int res = virDomainSetMemory(memStats[i].domain, newMemorySize);
         if (res == -1) fprintf(stderr, "fail to set memory\n");
         fprintf(stdout, "New memory size is %lu\n", newMemorySize);
       }
