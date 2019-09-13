@@ -10,6 +10,7 @@ struct MemStat {
   virDomainPtr domain;
   virDomainInfoPtr domainInfo;
   unsigned long memory;
+  unsigned long availableMemory;
 };
 
 typedef struct MemStat* MemStatPtr;
@@ -32,12 +33,13 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
     memStats[i].domain = domain;
     memStats[i].domainInfo = domainInfo;
     memStats[i].memory = memStatStruct[VIR_DOMAIN_MEMORY_STAT_UNUSED].val;
+    memStats[i].availableMemory = memStatStruct[VIR_DOMAIN_MEMORY_STAT_AVAILABLE].val;
   }
 
   qsort((void *)memStats, domainCnt, sizeof(struct MemStat), comparator);
   for (int i = 0; i < domainCnt; i++) {
-    fprintf(stdout, "domain %s -- unused memory %lu / %lu \n",
-      virDomainGetName(memStats[i].domain), memStats[i].memory, memStats[i].domainInfo->maxMem);
+    fprintf(stdout, "domain %s -- unused memory %lu / %lu -- available memory %lu \n",
+      virDomainGetName(memStats[i].domain), memStats[i].memory, memStats[i].domainInfo->maxMem, memStats[i].availableMemory);
   }
 }
 
@@ -99,7 +101,7 @@ int main(int argc, char *argv[]) {
     // in the end, if remaining is positive, assign back to hypervisor
     fprintf(stdout, "%s\n", "Rebalancing domain memeory");
     unsigned long long freeMemory = virNodeGetFreeMemory(conn) / 1024;
-    rebalanceMemory(memStats, activeDomains, domainCnt, freeMemory);
+    // rebalanceMemory(memStats, activeDomains, domainCnt, freeMemory);
     free(memStats);
     sleep(interval);
   }
