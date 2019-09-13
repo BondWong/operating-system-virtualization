@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 
-const float ABUNDANCE_THRESHOLD = 0.6;
+const float ABUNDANCE_THRESHOLD = 0.3;
 const unsigned long HOST_MINIMUM = 200 * 1024;
 const float MEMORY_CHANGE_RATE = 0.1;
 
