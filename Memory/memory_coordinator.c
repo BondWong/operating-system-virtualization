@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 
-const float ABUNDANCE_THRESHOLD = 0.3;
+const float ABUNDANCE_THRESHOLD = 0.2;
 const unsigned long HOST_MINIMUM = 200 * 1024;
 const float MEMORY_CHANGE_RATE = 0.1;
 
@@ -38,8 +38,8 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
 
   qsort((void *)memStats, domainCnt, sizeof(struct MemStat), comparator);
   for (int i = 0; i < domainCnt; i++) {
-    fprintf(stdout, "domain %s -- available memory %lu / total memory %lu\n",
-      virDomainGetName(memStats[i].domain), memStats[i].memory, memStats[i].domainInfo->maxMem);
+    fprintf(stdout, "domain %s -- available memory %lu / assigned memory %lu / total memory %lu\n",
+      virDomainGetName(memStats[i].domain), memStats[i].memory, memStats[i].domainInfo->memory, memStats[i].domainInfo->maxMem);
   }
 }
 
