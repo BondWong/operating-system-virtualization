@@ -38,8 +38,8 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
 
   qsort((void *)memStats, domainCnt, sizeof(struct MemStat), comparator);
   for (int i = 0; i < domainCnt; i++) {
-    fprintf(stdout, "domain %s -- unused memory %lu / %lu -- available memory %lu \n",
-      virDomainGetName(memStats[i].domain), memStats[i].memory, memStats[i].domainInfo->maxMem, memStats[i].availableMemory);
+    fprintf(stdout, "domain %s -- unused memory %lu -- available memory %lu -- used memory %lu -- total memory %lu\n",
+      virDomainGetName(memStats[i].domain), memStats[i].memory, memStats[i].availableMemory, memStats[i].domainInfo->memory, memStats[i].domainInfo->maxMem);
   }
 }
 
