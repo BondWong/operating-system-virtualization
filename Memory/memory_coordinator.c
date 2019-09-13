@@ -4,9 +4,9 @@
 #include <unistd.h>
 #include <string.h>
 
-const float ABUNDANCE_THRESHOLD = 100 * 1024;
+const unsigned long ABUNDANCE_THRESHOLD = 100 * 1024;
 const unsigned long HOST_MINIMUM = 200 * 1024;
-const float MEMORY_CHANGE_DELTA = 50 * 1024;
+const unsigned long MEMORY_CHANGE_DELTA = 50 * 1024;
 
 struct MemStat {
   virDomainPtr domain;
