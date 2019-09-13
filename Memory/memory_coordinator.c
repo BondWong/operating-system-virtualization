@@ -48,7 +48,7 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
     for (int i = 0; i < domainCnt; i++) {
       unsigned long threshold = ABUNDANCE_THRESHOLD * memStats[i].domainInfo->maxMem;
       if (memStats[i].memory > threshold) {
-        unsigned long reclaim = memStats[i].memory * MEMORY_CHANGE_RATE;
+        unsigned long reclaim = memStats[i].domainInfo->maxMem * MEMORY_CHANGE_RATE;
         remain += reclaim;
         // hypervisor inflats balloon to reclaim memory
         unsigned long newMemorySize = memStats[i].memory - reclaim;
@@ -56,7 +56,7 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
         virDomainSetMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", newMemorySize);
       } else {
-        unsigned long assign = memStats[i].memory * MEMORY_CHANGE_RATE;
+        unsigned long assign = memStats[i].domainInfo->maxMem * MEMORY_CHANGE_RATE;
         remain -= assign;
         // if hypervisor itself is starving, don't assign
         if (remain <= 0 && freeMemory <= HOST_MINIMUM) {
@@ -65,7 +65,7 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
         }
         // hypervisor deflats balloon to assign memory
         unsigned long newMemorySize = memStats[i].memory + assign;
-        fprintf(stdout, "Assigning memeory %lu from domain %s \n", assign, virDomainGetName(memStats[i].domain));
+        fprintf(stdout, "Assigning memeory %lu to domain %s \n", assign, virDomainGetName(memStats[i].domain));
         virDomainSetMemory(memStats[i].domain, newMemorySize);
         fprintf(stdout, "New memory size is %lu\n", newMemorySize);
       }
