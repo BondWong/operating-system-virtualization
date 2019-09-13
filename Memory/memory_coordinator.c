@@ -44,8 +44,8 @@ void getAndSortMemStat(virConnectPtr conn, MemStatPtr memStats, const int* activ
 
   void rebalanceMemory(MemStatPtr memStats, int *activeDomains, int domainCnt, unsigned long long freeMemory) {
     unsigned long remain = 0;
-    unsigned long threshold = ABUNDANCE_THRESHOLD * memStats[i].domainInfo->maxMem;
     for (int i = 0; i < domainCnt; i++) {
+      unsigned long threshold = ABUNDANCE_THRESHOLD * memStats[i].domainInfo->maxMem;
       if (memStats[i].memory > threshold) {
         unsigned long reclaim = memStats[i].memory - threshold;
         remain += reclaim;
