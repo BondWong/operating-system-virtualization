@@ -1,5 +1,5 @@
 Script started on 2019-09-14 22:43:47-0700
-]0;root@ubuntu: /home/bond/git/cs6210Project1_test/memoryroot@ubuntu:/home/bond/git/cs6210Project1_test/memory# ./monitor.py 
+]0;root@ubuntu: /home/bond/git/cs6210Project1_test/memoryroot@ubuntu:/home/bond/git/cs6210Project1_test/memory# ./monitor.py
 firsttest: 512.0 312.51953125
 secondtest: 512.0 312.5859375
 thirdtest: 512.0 312.53515625
@@ -797,4 +797,3 @@ secondtest: 312.0 93.73046875
 thirdtest: 192.0 117.61328125
 fourthtest: 192.0 117.43359375
 --------------------------------------------------------------------------------
-total  :    
