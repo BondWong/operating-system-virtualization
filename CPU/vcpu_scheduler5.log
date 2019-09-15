@@ -658,4 +658,34 @@ eighthtest: ([(0, 1, 21980000000L, 1)], [(False, True, False, False)])
 2: 67.0 ['firsttest', 'seventhtest']
 3: 65.0 ['secondtest', 'fifthtest']
 --------------------------------------------------------------------------------
-firsttest: ([
+firsttest: ([(0, 1, 31820000000L, 2)], [(False, False, True, False)])
+secondtest: ([(0, 1, 33250000000L, 3)], [(False, False, False, True)])
+thirdtest: ([(0, 1, 32900000000L, 0)], [(True, False, False, False)])
+fourthtest: ([(0, 1, 33040000000L, 1)], [(False, True, False, False)])
+fifthtest: ([(0, 1, 22790000000L, 3)], [(False, False, False, True)])
+sixthtest: ([(0, 1, 22740000000L, 0)], [(True, False, False, False)])
+seventhtest: ([(0, 1, 22600000000L, 2)], [(False, False, True, False)])
+eighthtest: ([(0, 1, 22170000000L, 1)], [(False, True, False, False)])
+--------------------------------------------------------------------------------
+0: 67.0 ['thirdtest', 'sixthtest']
+1: 64.0 ['fourthtest', 'eighthtest']
+2: 65.0 ['firsttest', 'seventhtest']
+3: 66.0 ['secondtest', 'fifthtest']
+--------------------------------------------------------------------------------
+^CTraceback (most recent call last):
+  File "./monitor.py", line 72, in <module>
+    s.run()
+  File "/usr/lib/python2.7/sched.py", line 111, in run
+    delayfunc(time - now)
+KeyboardInterrupt
+]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# ^C
+]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# ^C
+]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# ^C
+]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# clear
+[3J[H[2J]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# mv ~.[K[Kvp[Kcpu_scheduler5.log ./[K./../ps[K[Kos[K[K
+cs6210Project1_test/             operating-system-virtualization/ 
+]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# mv vcpu_scheduler5.log ../../p[[K[Koperating-system-virtualization/CPU/
+]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# clear
+[3J[H[2J]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# [K]0;root@ubuntu: /home/bond/git/cs6210Project1_test/cpuroot@ubuntu:/home/bond/git/cs6210Project1_test/cpu# exit
+
+Script done on 2019-09-14 22:08:00-0700
