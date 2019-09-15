@@ -47,7 +47,7 @@ This algorithm works like this:
 
 This algorithm yields optimal solution as it tried all the possible solution. But due to timing, I didn't implement it.
 
-## log files Explained (all with an internal of 2 seconds)
+# log files Explained (all with an internal of 2 seconds)
 The scheduler avoids rebalancing when it is balanced. It calculates an average CPUTimeDelta each round and compare to each CPUTimeDelta of each pCPU. If no one has a distance to the average by more than 10%, it is balanced, then the algorithm will not do anything.
 
 ### log1
