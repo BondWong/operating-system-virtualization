@@ -1,6 +1,9 @@
 ### How To Run
-1. make
-2. vcpu_scheduler 2
+1. Open a terminal tab
+2. `cd CPU`
+3. `make`
+4. `./vcpu_scheduler 2`
+5. **Important Note** To generate the testing logs, please follow instruction from https://github.gatech.edu/agopal34/cs6210Project1_test/blob/master/cpu/HowToDoTest.md before running `./vcpu_scheduler 2`
 
 ### The Algorithm Explained
 There are two algorithms implemented, and one is designed

@@ -45,7 +45,6 @@ int arraycmp(int* arr1, int size1, int* arr2, int size2) {
 int comparator(const void* p1, const void* p2) {
   vCPUStatsPtr p = (vCPUStatsPtr)p1;
   vCPUStatsPtr q = (vCPUStatsPtr)p2;
-
   return p->CPUTimeDelta - q->CPUTimeDelta;
 }
 
@@ -86,6 +85,7 @@ int sampleDomainInfo(virConnectPtr conn, int domainCnt, int* activeDomains,
   return 0;
 }
 
+// navie rebalancing, did't use to generate the test logs, refer to read me for explanation
 int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int vCPUCnt) {
   int from = -1, to = -1;
   unsigned long long curMax = 0;
@@ -126,12 +126,14 @@ int rebalance(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int
 }
 
 int rebalanceBySorting(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPUInfo, int vCPUCnt) {
+  // sort CPUStats by CPUTimeDelta in ascending order
   qsort((void *)curVCPUInfo, vCPUCnt, sizeof(struct vCPUStats), comparator);
 
   for (int i = 0; i < vCPUCnt; i++) fprintf(stdout, "%llu ", curVCPUInfo[i].CPUTimeDelta);
   fprintf(stdout, "\n");
 
   int k = 0;
+  // uses two pointer from head and tail, iteratively assigns head and tail to a pCPU
   for (int i = 0, j = vCPUCnt - 1; i <= j; i++, j--) {
     pCPUStats[k].domainIdCnt = 0; // remove all ids so that we can reassign
     pCPUStats[k].CPUTimeDelta += curVCPUInfo[i].CPUTimeDelta;
@@ -151,12 +153,14 @@ int rebalanceBySorting(pCPUStatsPtr pCPUStats, int pCPUCnt, vCPUStatsPtr curVCPU
 
 int repin(virConnectPtr conn, pCPUStatsPtr curPCPUStats, pCPUStatsPtr prevPCPUStats, int pCPUCnt) {
   for (int i = 0; i < pCPUCnt; i++) {
+    // calculate the new cpumap for a given vCPU, skip if nothing is changed from last round.
     unsigned char pCPU = 0x1 << i;
     if(arraycmp(curPCPUStats[i].domainIds, curPCPUStats[i].domainIdCnt,
       prevPCPUStats[i].domainIds, prevPCPUStats[i].domainIdCnt) == 0) {
         fprintf(stdout, "No need to repining, skipping ... \n");
         continue;
       }
+    // use the newly calculated cpumap to repin vCPU
     for (int j = 0; j < curPCPUStats[i].domainIdCnt; j++) {
       fprintf(stdout, "Repining domain %d to pCPU %d with cpuamp %d ... \n", curPCPUStats[i].domainIds[j], i, pCPU);
       virDomainPtr domain = virDomainLookupByID(conn, curPCPUStats[i].domainIds[j]);
@@ -203,14 +207,17 @@ int main(int argc, char *argv[]) {
     int *activeDomains = malloc(sizeof(int) * domainCnt);
     virConnectListDomains(conn, activeDomains, domainCnt);
 
+    // profiling pCPU usage of each domain
     fprintf(stdout, "Sampling pCPU stats...\n");
     sampleDomainInfo(conn, domainCnt, activeDomains, curPCPUStats, prevVCPUStats, curVCPUStats);
 
+    // calculate average cpu time delta
     unsigned long long averageDelta = 0;
     for (int i = 0; i < PCPU_CNT; i++) averageDelta += curPCPUStats[i].CPUTimeDelta;
     averageDelta /= 4;
     int rebalanceNeeded = 0;
     for (int i = 0; i < PCPU_CNT; i++) {
+      // if some pCPU time delta is different by more than 10%, run rebalance algorithm
       if (abs(curPCPUStats[i].CPUTimeDelta - averageDelta) > 0.1 * averageDelta) {
         rebalanceNeeded = 1;
         break;
@@ -218,10 +225,13 @@ int main(int argc, char *argv[]) {
     }
 
     if (rebalanceNeeded == 1) {
+      // rebalancing
       fprintf(stdout, "Running rebalance algorithm...\n");
+      // NOTE, to use naive rebalcne algorithm, uncomment this
       // rebalance(curPCPUStats, PCPU_CNT, curVCPUStats, domainCnt);
       rebalanceBySorting(curPCPUStats, PCPU_CNT, curVCPUStats, domainCnt);
 
+      // repin vCPU to pCPU according the result of rebalancing algorithm
       fprintf(stdout, "Repinning vCPUs...\n");
       repin(conn, curPCPUStats, prePCPUStats, PCPU_CNT);
     } else {

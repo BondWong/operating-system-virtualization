@@ -1,9 +1,9 @@
 ### How To Run
 1. Open a terminal tab
-2. `cd CPU`
+2. `cd Memory`
 3. `make`
 4. `./memory_coordinator 2`
-5. **Important Note** To generate the testing logs, please follow instruction from https://github.gatech.edu/agopal34/cs6210Project1_test/blob/master/cpu/HowToDoTest.md before running `./memory_coordinator 2`
+5. **Important Note** To generate the testing logs, please follow instruction from https://github.gatech.edu/agopal34/cs6210Project1_test/blob/master/memory/HowToDoTest.md before running `./memory_coordinator 2`
 
 ### The Algorithm Explained
 The algorithm poll memory stats periodically and sort the memory stats by available memory size that a vm has in descending order. It then iterates through the memory stats. For those exceed `ABUNDANCE_THRESHOLD`, the algorithm collects `MEMORY_CHANGE_DELTA` amount from them, and for those fall below the `ABUNDANCE_THRESHOLD`, the algorithm allocates `MEMORY_CHANGE_DELTA` amount memory to them. There is special case where the hypervisor has to give away its own memory to VMs. If the hypervisor available memory size is below `HOST_MINIMUM`, the hypervisor will not give away memory.
