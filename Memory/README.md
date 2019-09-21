@@ -15,9 +15,9 @@ The algorithm poll memory stats periodically and sort the memory stats by availa
 
 ## log1 -- test1
 There are three stages in the log.
-Firstly, all vm's total memory is dropping. Since all of them exceeding `ABUNDANCE_THRESHOLD`, the algorithm collects memory from them assign them back to hypervisor. But since VM1 is consuming memory, its available memory drops faster.
-Second stage is when all vm memory drops to near 100 MB. You can see that the inactive three vm memory is ranging between 95~110MB. The reason is that the algorithm is making sure they at least has memory of size of `ABUNDANCE_THRESHOLD`. At the stage, VM1 still consumes memory. It's available memory drops further down below 100MB. As you can see, from this point on, the algorithm start allocating memory to VM1.
-Stage three is when VM1 cleans its allocated memory. The available memory suddenly becomes larger. The algorithm starts collecting memory from it till its available memory rangs between 95~110MB.
+1. All vm's total memory is dropping. Since all of them exceeding `ABUNDANCE_THRESHOLD`, the algorithm collects memory from them assign them back to hypervisor. But since VM1 is consuming memory, its available memory drops faster.
+2. Second stage is when all vm memory drops to near 100 MB. You can see that the inactive three vm memory is ranging between 95~110MB. The reason is that the algorithm is making sure they at least has memory of size of `ABUNDANCE_THRESHOLD`. At the stage, VM1 still consumes memory. It's available memory drops further down below 100MB. As you can see, from this point on, the algorithm start allocating memory to VM1.
+3. Stage three is when VM1 cleans its allocated memory. The available memory suddenly becomes larger. The algorithm starts collecting memory from it till its available memory rangs between 95~110MB.
 
 ## log2 -- test2
 Similar to log1, except that all VMs' memory stat behave like the VM1 in log1 since they are all consuming memory.
